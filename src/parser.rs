@@ -1,3 +1,5 @@
+mod types;
+
 pub fn parse(content: String) -> i32 {
   println!("good");
   // let mut buf = String::new();
