@@ -8,7 +8,7 @@ pub enum CirruNode {
   CirruList(Vec<CirruNode>),
 }
 
-#[derive(fmt::Debug)]
+#[derive(fmt::Debug, PartialEq)]
 pub enum CirruLexState {
   LexStateSpace,
   LexStateToken,
@@ -17,21 +17,24 @@ pub enum CirruLexState {
   LexStateString,
 }
 
-#[derive(fmt::Debug)]
+#[derive(fmt::Debug, PartialEq, Clone)]
 pub enum CirruLexItem {
   LexItemOpen,
   LexItemClose,
+  LexItemEof,
   LexItemIndent(usize),
   LexItemString(String),
 }
+
+pub type CirruLexItemList = Vec<CirruLexItem>;
 
 use CirruNode::{CirruLeaf, CirruList};
 
 impl fmt::Display for CirruNode {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
-      CirruNode::CirruLeaf(a) => write!(f, "{}", a),
-      CirruNode::CirruList(xs) => {
+      Self::CirruLeaf(a) => write!(f, "{}", a),
+      Self::CirruList(xs) => {
         write!(f, "(")?;
         for (idx, x) in xs.iter().enumerate() {
           if idx > 0 {
@@ -57,8 +60,8 @@ impl fmt::Debug for CirruNode {
 impl PartialEq for CirruNode {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
-      (CirruNode::CirruLeaf(a), CirruNode::CirruLeaf(b)) => a == b,
-      (CirruNode::CirruList(a), CirruNode::CirruList(b)) => a == b,
+      (Self::CirruLeaf(a), Self::CirruLeaf(b)) => a == b,
+      (Self::CirruList(a), Self::CirruList(b)) => a == b,
       (_, _) => false,
     }
   }
