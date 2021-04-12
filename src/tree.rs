@@ -1,3 +1,9 @@
+#[path = "types.rs"]
+mod types;
+
+use types::CirruNode;
+use types::CirruNode::*;
+
 // mutable to acc
 pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
   let mut result = acc;
@@ -7,4 +13,90 @@ pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
     }
   }
   result
+}
+
+fn resolve_comma(xs: Vec<CirruNode>) -> Vec<CirruNode> {
+  if xs.len() == 0 {
+    return vec![];
+  } else {
+    return comma_helper(xs);
+  }
+}
+
+fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
+  let mut before: Vec<CirruNode> = vec![];
+  let after: Vec<CirruNode> = intial_after;
+
+  let mut pointer = 0;
+
+  loop {
+    if pointer >= after.len() {
+      return before;
+    }
+    let cursor = after[pointer].clone();
+    match cursor {
+      CirruList(xs) => {
+        if xs.len() > 0 {
+          let head = xs[0].clone();
+          match head {
+            CirruList(ys) => {
+              before.push(CirruList(resolve_comma(ys)));
+            }
+            CirruLeaf(s) => {
+              if s == "," {
+                before.extend_from_slice(&resolve_comma(xs[2..].to_vec()))
+              } else {
+                before.push(CirruList(resolve_comma(xs)));
+              }
+            }
+          }
+        } else {
+          before.push(CirruList(vec![]));
+        }
+      }
+      CirruLeaf(_) => {
+        before.push(cursor);
+      }
+    }
+    pointer += 1;
+  }
+}
+
+pub fn resolve_dollar(xs: Vec<CirruNode>) -> Vec<CirruNode> {
+  if xs.len() == 0 {
+    return vec![];
+  } else {
+    return dollar_helper(xs);
+  }
+}
+
+fn dollar_helper(initial_after: Vec<CirruNode>) -> Vec<CirruNode> {
+  let mut before: Vec<CirruNode> = vec![];
+  let after: Vec<CirruNode> = initial_after;
+
+  let mut pointer = 0;
+
+  loop {
+    if pointer >= after.len() {
+      return before;
+    } else {
+      let cursor = after[pointer].clone();
+
+      match cursor {
+        CirruList(xs) => {
+          before.push(CirruList(resolve_dollar(xs)));
+          pointer += 1;
+        }
+        CirruLeaf(s) => {
+          if s == "$" {
+            before.extend_from_slice(&resolve_dollar(after[pointer + 1..].to_vec()));
+            pointer = after.len();
+          } else {
+            before.push(CirruLeaf(s));
+            pointer += 1;
+          }
+        }
+      }
+    }
+  }
 }

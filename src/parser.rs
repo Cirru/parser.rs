@@ -9,43 +9,41 @@ use types::CirruLexState::*;
 use types::CirruNode::*;
 use types::{CirruLexItem, CirruLexItemList, CirruLexState, CirruNode};
 
-fn graspe_exprs<'a>(pull_token: &dyn Fn() -> CirruLexItem) -> Vec<CirruNode> {
-  let mut pointer: Vec<CirruNode> = vec![];
-  let mut pointer_stack: Vec<Vec<CirruNode>> = vec![];
-  loop {
-    let cursor: CirruLexItem = pull_token(); // TODO Option
-    match cursor {
-      LexItemClose => {
-        if pointer_stack.len() == 0 {
-          return pointer;
-        } else {
-          let v = pointer_stack.pop();
-          match v {
-            Some(collected) => pointer.push(CirruList(collected)),
-            None => unreachable!(),
-          }
-        }
-      }
-      LexItemEof => unreachable!(),
-      LexItemOpen => {
-        pointer_stack.push(pointer);
-        pointer = vec![];
-      }
-      LexItemString(s) => pointer.push(CirruLeaf(s)),
-      LexItemIndent(_) => unreachable!(),
-    }
-  }
-}
-
-fn build_exprs(pull_token: &dyn Fn() -> CirruLexItem) -> Vec<CirruNode> {
+fn build_exprs<F>(mut pull_token: F) -> Vec<CirruNode>
+where
+  F: FnMut() -> CirruLexItem,
+{
   let mut acc: Vec<CirruNode> = vec![];
-
   loop {
     let chunk = pull_token(); // TODO Option
     match chunk {
       LexItemOpen => {
-        let expr = graspe_exprs(pull_token);
-        acc.push(CirruList(expr))
+        let mut pointer: Vec<CirruNode> = vec![];
+        let mut pointer_stack: Vec<Vec<CirruNode>> = vec![];
+        loop {
+          let cursor: CirruLexItem = pull_token(); // TODO Option
+          match cursor {
+            LexItemClose => {
+              if pointer_stack.len() == 0 {
+                acc.push(CirruList(pointer.clone()));
+                break;
+              } else {
+                let v = pointer_stack.pop();
+                match v {
+                  Some(collected) => pointer.push(CirruList(collected)),
+                  None => unreachable!(),
+                }
+              }
+            }
+            LexItemEof => unreachable!(),
+            LexItemOpen => {
+              pointer_stack.push(pointer);
+              pointer = vec![];
+            }
+            LexItemString(s) => pointer.push(CirruLeaf(s)),
+            LexItemIndent(_) => unreachable!(),
+          }
+        }
       }
       LexItemEof => return acc,
       _ => unreachable!("unknown chunk"),
@@ -283,16 +281,15 @@ fn resolve_indentations(initialTokens: CirruLexItemList) -> CirruLexItemList {
 
 pub fn parse(code: String) -> CirruNode {
   // TODO
-  // let tokens = resolve_indentations(lex(code));
-  // let pointer = 0;
-  fn pull_token() -> CirruLexItem {
-    // let c = tokens[pointer];
-    // pointer += 1;
-    // return c;
-    return LexItemString(String::from("TODO"));
-  }
+  let tokens = resolve_indentations(lex(code));
+  let mut pointer = 0;
+  let pull_token = || -> CirruLexItem {
+    let c = tokens[pointer].clone();
+    pointer += 1;
+    return c;
+  };
   // return resolveComma(resolveDollar(buildExprs(pullToken)));
-  return CirruList(build_exprs(&pull_token));
+  return CirruList(build_exprs(pull_token));
 }
 
 #[cfg(test)]
