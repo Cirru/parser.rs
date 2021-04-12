@@ -2,7 +2,6 @@ use std::clone::Clone;
 use std::fmt;
 // use std::marker::Copy;
 
-mod types {}
 #[derive(Clone)]
 pub enum CirruNode {
   CirruLeaf(String),
@@ -22,7 +21,6 @@ pub enum CirruLexState {
 pub enum CirruLexItem {
   LexItemOpen,
   LexItemClose,
-  LexItemEof,
   LexItemIndent(usize),
   LexItemString(String),
 }

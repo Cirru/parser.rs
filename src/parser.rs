@@ -3,19 +3,23 @@ mod types;
 
 use modulo::Mod;
 
-use tree::push_to_list;
+use tree::{push_to_list, resolve_comma, resolve_dollar};
 use types::CirruLexItem::*;
 use types::CirruLexState::*;
 use types::CirruNode::*;
-use types::{CirruLexItem, CirruLexItemList, CirruLexState, CirruNode};
+use types::{CirruLexItem, CirruLexItemList, CirruNode};
 
-fn build_exprs<F>(mut pull_token: F) -> Vec<CirruNode>
-where
-  F: FnMut() -> CirruLexItem,
-{
+fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
   let mut acc: Vec<CirruNode> = vec![];
+  let mut pointer = 0;
+  let mut pull_token = || {
+    let c = tokens[pointer].clone();
+    pointer += 1;
+    return c;
+  };
   loop {
     let chunk = pull_token(); // TODO Option
+
     match chunk {
       LexItemOpen => {
         let mut pointer: Vec<CirruNode> = vec![];
@@ -35,7 +39,6 @@ where
                 }
               }
             }
-            LexItemEof => unreachable!(),
             LexItemOpen => {
               pointer_stack.push(pointer);
               pointer = vec![];
@@ -45,7 +48,6 @@ where
           }
         }
       }
-      LexItemEof => return acc,
       _ => unreachable!("unknown chunk"),
     }
   }
@@ -221,10 +223,10 @@ fn repeat<T: Clone>(times: usize, x: T) -> Vec<T> {
   acc
 }
 
-fn resolve_indentations(initialTokens: CirruLexItemList) -> CirruLexItemList {
+fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut level = 0;
-  let tokens: CirruLexItemList = initialTokens;
+  let tokens: CirruLexItemList = initial_tokens;
   let mut pointer = 0;
   loop {
     if pointer >= tokens.len() {
@@ -273,7 +275,6 @@ fn resolve_indentations(initialTokens: CirruLexItemList) -> CirruLexItemList {
             }
           }
         }
-        LexItemEof => panic!("TODO"),
       }
     }
   }
@@ -282,14 +283,8 @@ fn resolve_indentations(initialTokens: CirruLexItemList) -> CirruLexItemList {
 pub fn parse(code: String) -> CirruNode {
   // TODO
   let tokens = resolve_indentations(lex(code));
-  let mut pointer = 0;
-  let pull_token = || -> CirruLexItem {
-    let c = tokens[pointer].clone();
-    pointer += 1;
-    return c;
-  };
   // return resolveComma(resolveDollar(buildExprs(pullToken)));
-  return CirruList(build_exprs(pull_token));
+  return CirruList(resolve_comma(resolve_dollar(build_exprs(tokens))));
 }
 
 #[cfg(test)]

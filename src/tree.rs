@@ -1,8 +1,9 @@
-#[path = "types.rs"]
-mod types;
+use crate::types;
 
-use types::CirruNode;
-use types::CirruNode::*;
+pub use types::*;
+
+pub use types::CirruNode;
+pub use types::CirruNode::*;
 
 // mutable to acc
 pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
@@ -15,7 +16,7 @@ pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
   result
 }
 
-fn resolve_comma(xs: Vec<CirruNode>) -> Vec<CirruNode> {
+pub fn resolve_comma(xs: Vec<CirruNode>) -> Vec<CirruNode> {
   if xs.len() == 0 {
     return vec![];
   } else {
