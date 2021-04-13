@@ -3,6 +3,8 @@ use serde_json::Value;
 use crate::types::CirruNode;
 use crate::types::CirruNode::*;
 
+/// parse JSON `["a", ["b"]]` into Cirru,
+/// only Arrays and Strings are accepted
 pub fn from_json_value(x: Value) -> CirruNode {
   match x {
     Value::Array(ys) => {
@@ -17,6 +19,8 @@ pub fn from_json_value(x: Value) -> CirruNode {
   }
 }
 
+/// parse JSON string `r#"["a", ["b"]]"#` into Cirru,
+/// only Arrays and Strings are accepted
 pub fn from_json_str(s: &str) -> Result<CirruNode, String> {
   let v: serde_json::Result<Value> = serde_json::from_str(s);
   match v {
@@ -25,6 +29,7 @@ pub fn from_json_str(s: &str) -> Result<CirruNode, String> {
   }
 }
 
+/// generates JSON from Cirru Data
 pub fn to_json_value(x: CirruNode) -> Value {
   match x {
     CirruLeaf(s) => Value::String(s),
@@ -38,7 +43,7 @@ pub fn to_json_value(x: CirruNode) -> Value {
   }
 }
 
-/// generates to
+/// generates JSON string from Cirru Data
 pub fn to_json_str(x: CirruNode) -> String {
   let v = to_json_value(x);
   match serde_json::to_string(&v) {

@@ -1,3 +1,28 @@
+/*! # Cirru Parser
+This tiny parser parses indentation based syntax into nested a vector,
+then it could used as S-Expressions for evaluation or codegen.
+
+```cirru
+defn fib (x)
+  if (<= x 2) 1
+    +
+      fib $ dec x
+      fib $ - x 2
+```
+
+parses to:
+
+```edn
+[ ["defn" "fib" [ "x" ]
+    [ "if" [ "<=" "x" "2" ] "1"
+      [ "+" [ "fib" ["dec" "x"] ] [ "fib" ["-" "x" "2"] ] ]
+    ]
+] ]
+```
+
+find more on <http://text.cirru.org/> .
+*/
+
 mod tree;
 mod types;
 
@@ -75,6 +100,7 @@ fn parse_indentation(buffer: String) -> CirruLexItem {
   return LexItemIndent(size / 2);
 }
 
+/// internal function for lexing
 pub fn lex(initial_code: String) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut state = LexStateIndent;
@@ -244,6 +270,7 @@ fn repeat<T: Clone>(times: usize, x: T) -> Vec<T> {
   acc
 }
 
+/// internal function for figuring out indentations after lexing
 pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut level = 0;
@@ -302,6 +329,11 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
   }
 }
 
+/// parse function, parse String to CirruNode.
+///
+/// ```rs
+/// parse(String::from("def a 1"))
+/// ```
 pub fn parse(code: String) -> Result<CirruNode, String> {
   let tokens = resolve_indentations(lex(code));
   // println!("{:?}", tokens);

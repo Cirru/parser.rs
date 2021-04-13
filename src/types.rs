@@ -5,6 +5,7 @@ use std::str;
 
 use regex::Regex;
 
+/// Cirru uses nested Vecters and Strings as data structure
 #[derive(Clone)]
 pub enum CirruNode {
   CirruLeaf(String),
@@ -20,6 +21,7 @@ pub enum CirruLexState {
   LexStateString,
 }
 
+/// internal control item during lexing
 #[derive(fmt::Debug, PartialEq, Clone)]
 pub enum CirruLexItem {
   LexItemOpen,

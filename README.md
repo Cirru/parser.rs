@@ -4,6 +4,8 @@
 
 Found on [crate](https://crates.io/crates/cirru_parser).
 
+[Rust Docs](https://docs.rs/crate/cirru_parser/).
+
 ```bash
 cargo install cirru_parser
 ```
