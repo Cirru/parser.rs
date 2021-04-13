@@ -40,7 +40,7 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
         if xs.len() > 0 {
           let head = xs[0].clone();
           match head {
-            CirruList(ys) => {
+            CirruList(_) => {
               before.push(CirruList(resolve_comma(xs)));
             }
             CirruLeaf(s) => {
