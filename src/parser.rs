@@ -306,8 +306,7 @@ pub fn parse(code: String) -> Result<CirruNode, String> {
   let tokens = resolve_indentations(lex(code));
   // println!("{:?}", tokens);
   let tree = build_exprs(tokens);
-  println!("tree {:?}", tree);
+  // println!("tree {:?}", tree);
   let v = CirruList(resolve_comma(resolve_dollar(tree)));
-  // let v = CirruList(resolve_dollar(tree));
   return Ok(v);
 }

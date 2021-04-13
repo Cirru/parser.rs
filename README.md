@@ -2,8 +2,10 @@
 
 ### Usages
 
+Found on [crate](https://crates.io/crates/cirru_parser).
+
 ```bash
-cargo install cirru-parser
+cargo install cirru_parser
 ```
 
 ```rs
