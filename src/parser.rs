@@ -40,8 +40,12 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
                 break;
               } else {
                 let v = pointer_stack.pop();
+                let prev_p = pointer;
                 match v {
-                  Some(collected) => pointer.push(CirruList(collected)),
+                  Some(collected) => {
+                    pointer = collected;
+                    pointer.push(CirruList(prev_p))
+                  }
                   None => unreachable!(),
                 }
               }
