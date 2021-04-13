@@ -21,7 +21,7 @@ fn test_fmt() {
 
   let b = a.clone();
   let c = CirruList(vec![a, b]);
-  assert_eq!(format!("{}", c), "(na, na)")
+  assert_eq!(format!("{}", c), "(na na)")
 }
 
 #[test]

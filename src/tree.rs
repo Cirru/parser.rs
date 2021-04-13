@@ -41,11 +41,11 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
           let head = xs[0].clone();
           match head {
             CirruList(ys) => {
-              before.push(CirruList(resolve_comma(ys)));
+              before.push(CirruList(resolve_comma(xs)));
             }
             CirruLeaf(s) => {
               if s == "," {
-                before.extend_from_slice(&resolve_comma(xs[2..].to_vec()))
+                before.extend_from_slice(&resolve_comma(xs[1..].to_vec()))
               } else {
                 before.push(CirruList(resolve_comma(xs)));
               }
@@ -90,7 +90,7 @@ fn dollar_helper(initial_after: Vec<CirruNode>) -> Vec<CirruNode> {
         }
         CirruLeaf(s) => {
           if s == "$" {
-            before.extend_from_slice(&resolve_dollar(after[pointer + 1..].to_vec()));
+            before.push(CirruList(resolve_dollar(after[pointer + 1..].to_vec())));
             pointer = after.len();
           } else {
             before.push(CirruLeaf(s));

@@ -226,7 +226,6 @@ pub fn lex(initial_code: String) -> CirruLexItemList {
             panic!("unexpected ) at line start")
           }
           _ => {
-            println!("buffer: {}", buffer);
             acc.push(parse_indentation(buffer));
             state = LexStateToken;
             buffer = String::from(c);
@@ -306,6 +305,9 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
 pub fn parse(code: String) -> Result<CirruNode, String> {
   let tokens = resolve_indentations(lex(code));
   // println!("{:?}", tokens);
-  let v = CirruList(resolve_comma(resolve_dollar(build_exprs(tokens))));
+  let tree = build_exprs(tokens);
+  println!("tree {:?}", tree);
+  let v = CirruList(resolve_comma(resolve_dollar(tree)));
+  // let v = CirruList(resolve_dollar(tree));
   return Ok(v);
 }
