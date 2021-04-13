@@ -1,10 +1,89 @@
-use cirru_parser::parse;
-use cirru_parser::CirruNode::*;
+use cirru_parser::lex;
+use cirru_parser::CirruLexItem::*;
 
 #[test]
-fn parse_a() {
+fn lexer() {
   assert_eq!(
-    parse(String::from("a")),
-    CirruList(vec![CirruList(vec![CirruLeaf(String::from("a"))])])
+    lex(String::from("a")),
+    vec![LexItemIndent(0), LexItemString(String::from("a"))],
+  );
+  assert_eq!(
+    lex(String::from("a b")),
+    vec![
+      LexItemIndent(0),
+      LexItemString(String::from("a")),
+      LexItemString(String::from("b"))
+    ],
+  );
+  assert_eq!(
+    lex(String::from("(a)")),
+    vec![
+      LexItemIndent(0),
+      LexItemOpen,
+      LexItemString(String::from("a")),
+      LexItemClose,
+    ],
+  );
+  assert_eq!(
+    lex(String::from("(a b)")),
+    vec![
+      LexItemIndent(0),
+      LexItemOpen,
+      LexItemString(String::from("a")),
+      LexItemString(String::from("b")),
+      LexItemClose,
+    ],
+  );
+  assert_eq!(
+    lex(String::from("(a  b)  ")),
+    vec![
+      LexItemIndent(0),
+      LexItemOpen,
+      LexItemString(String::from("a")),
+      LexItemString(String::from("b")),
+      LexItemClose,
+    ],
+  );
+}
+
+#[test]
+fn lexer_with_indent() {
+  assert_eq!(
+    lex(String::from("a\n  b")),
+    vec![
+      LexItemIndent(0),
+      LexItemString(String::from("a")),
+      LexItemIndent(1),
+      LexItemString(String::from("b")),
+    ],
+  );
+  assert_eq!(
+    lex(String::from("a\n  b\nc")),
+    vec![
+      LexItemIndent(0),
+      LexItemString(String::from("a")),
+      LexItemIndent(1),
+      LexItemString(String::from("b")),
+      LexItemIndent(0),
+      LexItemString(String::from("c")),
+    ],
+  );
+}
+
+#[test]
+fn lex_strings() {
+  assert_eq!(
+    lex(String::from("\"a\"")),
+    vec![LexItemIndent(0), LexItemString(String::from("a"))],
+  );
+
+  assert_eq!(
+    lex(String::from(r#""a\\""#)),
+    vec![LexItemIndent(0), LexItemString(String::from("a\\"))],
+  );
+
+  assert_eq!(
+    lex(String::from(r#""a\n""#)),
+    vec![LexItemIndent(0), LexItemString(String::from("a\n"))],
   );
 }

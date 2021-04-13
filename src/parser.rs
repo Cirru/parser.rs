@@ -1,6 +1,8 @@
 mod tree;
 mod types;
 
+mod json;
+
 use modulo::Mod;
 
 use tree::{push_to_list, resolve_comma, resolve_dollar};
@@ -8,13 +10,13 @@ use types::CirruLexItem::*;
 use types::CirruLexState::*;
 use types::CirruNode::*;
 
+pub use json::*;
 pub use types::{CirruLexItem, CirruLexItemList, CirruNode};
 
 fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
   let mut acc: Vec<CirruNode> = vec![];
   let mut idx = 0;
   let mut pull_token = || {
-    println!("pulling {:?}", tokens);
     if idx >= tokens.len() {
       return None;
     }
@@ -69,8 +71,7 @@ fn parse_indentation(buffer: String) -> CirruLexItem {
   return LexItemIndent(size / 2);
 }
 
-fn lex(initial_code: String) -> CirruLexItemList {
-  println!("Lex...");
+pub fn lex(initial_code: String) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut state = LexStateIndent;
   let mut buffer = String::from("");
@@ -80,7 +81,6 @@ fn lex(initial_code: String) -> CirruLexItemList {
   let mut pointer = 0;
 
   loop {
-    println!("loop");
     count += 1;
     if count > 10000 {
       println!("pointer: {} , code: {}, state: {:?}", pointer, code, state);
@@ -146,11 +146,13 @@ fn lex(initial_code: String) -> CirruLexItemList {
             buffer = String::from("");
           }
           '(' => {
+            acc.push(LexItemString(buffer));
             acc.push(LexItemOpen);
             state = LexStateSpace;
             buffer = String::from("")
           }
           ')' => {
+            acc.push(LexItemString(buffer));
             acc.push(LexItemClose);
             state = LexStateSpace;
             buffer = String::from("")
@@ -239,7 +241,7 @@ fn repeat<T: Clone>(times: usize, x: T) -> Vec<T> {
   acc
 }
 
-fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
+pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut level = 0;
   let tokens: CirruLexItemList = initial_tokens;
@@ -297,8 +299,9 @@ fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
   }
 }
 
-pub fn parse(code: String) -> CirruNode {
+pub fn parse(code: String) -> Result<CirruNode, String> {
   let tokens = resolve_indentations(lex(code));
-  println!("{:?}", tokens);
-  return CirruList(resolve_comma(resolve_dollar(build_exprs(tokens))));
+  // println!("{:?}", tokens);
+  let v = CirruList(resolve_comma(resolve_dollar(build_exprs(tokens))));
+  return Ok(v);
 }
