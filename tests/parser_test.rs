@@ -1,10 +1,9 @@
 use std::fs;
 use std::io;
 
-use serde_json::{json, Value};
+use serde_json::json;
 
 use cirru_parser::parse;
-use cirru_parser::CirruNode::*;
 use cirru_parser::{from_json_str, from_json_value};
 
 #[test]

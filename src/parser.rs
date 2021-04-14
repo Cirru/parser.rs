@@ -25,6 +25,7 @@ find more on <http://text.cirru.org/> .
 
 mod tree;
 mod types;
+mod writer;
 
 mod json;
 
@@ -37,6 +38,7 @@ use types::CirruNode::*;
 
 pub use json::*;
 pub use types::{CirruLexItem, CirruLexItemList, CirruNode};
+pub use writer::*;
 
 fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
   let mut acc: Vec<CirruNode> = vec![];
