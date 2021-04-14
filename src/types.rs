@@ -1,7 +1,11 @@
 use std::clone::Clone;
 use std::fmt;
+use std::str;
 // use std::marker::Copy;
 
+use regex::Regex;
+
+/// Cirru uses nested Vecters and Strings as data structure
 #[derive(Clone)]
 pub enum CirruNode {
   CirruLeaf(String),
@@ -17,6 +21,7 @@ pub enum CirruLexState {
   LexStateString,
 }
 
+/// internal control item during lexing
 #[derive(fmt::Debug, PartialEq, Clone)]
 pub enum CirruLexItem {
   LexItemOpen,
@@ -32,12 +37,19 @@ use CirruNode::{CirruLeaf, CirruList};
 impl fmt::Display for CirruNode {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
-      Self::CirruLeaf(a) => write!(f, "{}", a),
+      Self::CirruLeaf(a) => {
+        let re = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
+        if re.is_match(a) {
+          write!(f, "{}", a)
+        } else {
+          write!(f, "\"{}\"", str::escape_debug(a))
+        }
+      }
       Self::CirruList(xs) => {
         write!(f, "(")?;
         for (idx, x) in xs.iter().enumerate() {
           if idx > 0 {
-            write!(f, ", ")?;
+            write!(f, " ")?;
           }
           write!(f, "{}", x)?;
         }

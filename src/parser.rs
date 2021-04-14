@@ -1,5 +1,32 @@
+/*! # Cirru Parser
+This tiny parser parses indentation based syntax into nested a vector,
+then it could used as S-Expressions for evaluation or codegen.
+
+```cirru
+defn fib (x)
+  if (<= x 2) 1
+    +
+      fib $ dec x
+      fib $ - x 2
+```
+
+parses to:
+
+```edn
+[ ["defn" "fib" [ "x" ]
+    [ "if" [ "<=" "x" "2" ] "1"
+      [ "+" [ "fib" ["dec" "x"] ] [ "fib" ["-" "x" "2"] ] ]
+    ]
+] ]
+```
+
+find more on <http://text.cirru.org/> .
+*/
+
 mod tree;
 mod types;
+
+mod json;
 
 use modulo::Mod;
 
@@ -8,13 +35,13 @@ use types::CirruLexItem::*;
 use types::CirruLexState::*;
 use types::CirruNode::*;
 
+pub use json::*;
 pub use types::{CirruLexItem, CirruLexItemList, CirruNode};
 
 fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
   let mut acc: Vec<CirruNode> = vec![];
   let mut idx = 0;
   let mut pull_token = || {
-    println!("pulling {:?}", tokens);
     if idx >= tokens.len() {
       return None;
     }
@@ -38,8 +65,12 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
                 break;
               } else {
                 let v = pointer_stack.pop();
+                let prev_p = pointer;
                 match v {
-                  Some(collected) => pointer.push(CirruList(collected)),
+                  Some(collected) => {
+                    pointer = collected;
+                    pointer.push(CirruList(prev_p))
+                  }
                   None => unreachable!(),
                 }
               }
@@ -69,8 +100,8 @@ fn parse_indentation(buffer: String) -> CirruLexItem {
   return LexItemIndent(size / 2);
 }
 
-fn lex(initial_code: String) -> CirruLexItemList {
-  println!("Lex...");
+/// internal function for lexing
+pub fn lex(initial_code: String) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut state = LexStateIndent;
   let mut buffer = String::from("");
@@ -80,7 +111,6 @@ fn lex(initial_code: String) -> CirruLexItemList {
   let mut pointer = 0;
 
   loop {
-    println!("loop");
     count += 1;
     if count > 10000 {
       println!("pointer: {} , code: {}, state: {:?}", pointer, code, state);
@@ -146,11 +176,13 @@ fn lex(initial_code: String) -> CirruLexItemList {
             buffer = String::from("");
           }
           '(' => {
+            acc.push(LexItemString(buffer));
             acc.push(LexItemOpen);
             state = LexStateSpace;
             buffer = String::from("")
           }
           ')' => {
+            acc.push(LexItemString(buffer));
             acc.push(LexItemClose);
             state = LexStateSpace;
             buffer = String::from("")
@@ -220,7 +252,6 @@ fn lex(initial_code: String) -> CirruLexItemList {
             panic!("unexpected ) at line start")
           }
           _ => {
-            println!("buffer: {}", buffer);
             acc.push(parse_indentation(buffer));
             state = LexStateToken;
             buffer = String::from(c);
@@ -239,7 +270,8 @@ fn repeat<T: Clone>(times: usize, x: T) -> Vec<T> {
   acc
 }
 
-fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
+/// internal function for figuring out indentations after lexing
+pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut level = 0;
   let tokens: CirruLexItemList = initial_tokens;
@@ -297,8 +329,16 @@ fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
   }
 }
 
-pub fn parse(code: String) -> CirruNode {
+/// parse function, parse String to CirruNode.
+///
+/// ```rs
+/// parse(String::from("def a 1"))
+/// ```
+pub fn parse(code: String) -> Result<CirruNode, String> {
   let tokens = resolve_indentations(lex(code));
-  println!("{:?}", tokens);
-  return CirruList(resolve_comma(resolve_dollar(build_exprs(tokens))));
+  // println!("{:?}", tokens);
+  let tree = build_exprs(tokens);
+  // println!("tree {:?}", tree);
+  let v = CirruList(resolve_comma(resolve_dollar(tree)));
+  return Ok(v);
 }
