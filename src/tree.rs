@@ -45,7 +45,7 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
             }
             CirruLeaf(s) => {
               if s == "," {
-                before.extend_from_slice(&resolve_comma(xs[1..].to_vec()))
+                before.extend(resolve_comma(xs[1..].to_vec()))
               } else {
                 before.push(CirruList(resolve_comma(xs)));
               }

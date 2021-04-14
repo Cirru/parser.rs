@@ -13,7 +13,11 @@ defn fib (n)
   "#;
 
   match parse(String::from(demo)) {
-    Ok(v) => println!("{:?}", v),
+    Ok(v) => {
+      println!("{:?}", v);
+      let writer_options = CirruWriterOptions { use_inline: false };
+      println!("{}", write_cirru(v, writer_options));
+    }
     Err(e) => println!("{:?}", e),
   }
 }
