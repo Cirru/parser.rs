@@ -1,4 +1,5 @@
 use std::clone::Clone;
+use std::cmp::Ordering;
 use std::fmt;
 use std::str;
 // use std::marker::Copy;
@@ -6,7 +7,7 @@ use std::str;
 use regex::Regex;
 
 /// Cirru uses nested Vecters and Strings as data structure
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub enum CirruNode {
   CirruLeaf(String),
   CirruList(Vec<CirruNode>),
@@ -22,7 +23,7 @@ pub enum CirruLexState {
 }
 
 /// internal control item during lexing
-#[derive(fmt::Debug, PartialEq, Clone)]
+#[derive(fmt::Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 pub enum CirruLexItem {
   LexItemOpen,
   LexItemClose,
@@ -74,6 +75,17 @@ impl PartialEq for CirruNode {
       (Self::CirruLeaf(a), Self::CirruLeaf(b)) => a == b,
       (Self::CirruList(a), Self::CirruList(b)) => a == b,
       (_, _) => false,
+    }
+  }
+}
+
+impl PartialOrd for CirruNode {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    match (self, other) {
+      (CirruLeaf(a), CirruLeaf(b)) => a.partial_cmp(b),
+      (CirruLeaf(_), CirruList(_)) => Some(Ordering::Less),
+      (CirruList(_), CirruLeaf(_)) => Some(Ordering::Greater),
+      (CirruList(a), CirruList(b)) => a.partial_cmp(b),
     }
   }
 }
