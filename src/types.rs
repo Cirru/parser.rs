@@ -69,6 +69,8 @@ impl fmt::Debug for CirruNode {
   }
 }
 
+impl Eq for CirruNode {}
+
 impl PartialEq for CirruNode {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
@@ -79,14 +81,20 @@ impl PartialEq for CirruNode {
   }
 }
 
+impl Ord for CirruNode {
+  fn cmp(&self, other: &Self) -> Ordering {
+    match (self, other) {
+      (CirruLeaf(a), CirruLeaf(b)) => a.cmp(b),
+      (CirruLeaf(_), CirruList(_)) => Ordering::Less,
+      (CirruList(_), CirruLeaf(_)) => Ordering::Greater,
+      (CirruList(a), CirruList(b)) => a.cmp(b),
+    }
+  }
+}
+
 impl PartialOrd for CirruNode {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    match (self, other) {
-      (CirruLeaf(a), CirruLeaf(b)) => a.partial_cmp(b),
-      (CirruLeaf(_), CirruList(_)) => Some(Ordering::Less),
-      (CirruList(_), CirruLeaf(_)) => Some(Ordering::Greater),
-      (CirruList(a), CirruList(b)) => a.partial_cmp(b),
-    }
+    Some(self.cmp(other))
   }
 }
 
