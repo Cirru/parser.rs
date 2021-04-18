@@ -17,10 +17,10 @@ pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
 }
 
 pub fn resolve_comma(xs: Vec<CirruNode>) -> Vec<CirruNode> {
-  if xs.len() == 0 {
+  if xs.is_empty() {
     return vec![];
   } else {
-    return comma_helper(xs);
+    comma_helper(xs)
   }
 }
 
@@ -37,7 +37,7 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
     let cursor = after[pointer].clone();
     match cursor {
       CirruList(xs) => {
-        if xs.len() > 0 {
+        if !xs.is_empty() {
           let head = xs[0].clone();
           match head {
             CirruList(_) => {
@@ -64,10 +64,10 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
 }
 
 pub fn resolve_dollar(xs: Vec<CirruNode>) -> Vec<CirruNode> {
-  if xs.len() == 0 {
+  if xs.is_empty() {
     return vec![];
   } else {
-    return dollar_helper(xs);
+    dollar_helper(xs)
   }
 }
 

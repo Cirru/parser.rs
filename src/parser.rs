@@ -49,7 +49,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
     }
     let c = tokens[idx].clone();
     idx += 1;
-    return Some(c);
+    Some(c)
   };
   loop {
     let chunk = pull_token(); // TODO Option
@@ -62,7 +62,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
           let cursor = pull_token(); // TODO Option
           match cursor {
             Some(LexItemClose) => {
-              if pointer_stack.len() == 0 {
+              if pointer_stack.is_empty() {
                 acc.push(CirruList(pointer.clone()));
                 break;
               } else {
@@ -99,7 +99,7 @@ fn parse_indentation(buffer: String) -> CirruLexItem {
   if size.modulo(2) == 1 {
     panic!("odd indentation size")
   }
-  return LexItemIndent(size / 2);
+  LexItemIndent(size / 2)
 }
 
 /// internal function for lexing
@@ -108,21 +108,15 @@ pub fn lex(initial_code: String) -> CirruLexItemList {
   let mut state = LexStateIndent;
   let mut buffer = String::from("");
   let code = initial_code;
-  let mut count = 0;
 
   let mut pointer = 0;
 
   loop {
-    count += 1;
-    if count > 10000 {
-      println!("pointer: {} , code: {}, state: {:?}", pointer, code, state);
-      panic!("looped too many times")
-    }
     if pointer >= code.len() {
       match state {
         LexStateSpace => return acc,
         LexStateToken => {
-          acc.push(LexItemString(buffer.clone())); // TODO why clone?
+          acc.push(LexItemString(buffer)); // TODO why clone?
           return acc;
         }
         LexStateEscape => panic!("unknown escape"),
@@ -280,7 +274,7 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
   let mut pointer = 0;
   loop {
     if pointer >= tokens.len() {
-      if acc.len() == 0 {
+      if acc.is_empty() {
         return vec![];
       } else {
         acc.insert(0, LexItemOpen);
@@ -302,13 +296,14 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
           acc.push(LexItemClose);
           pointer += 1;
         }
-        LexItemIndent(n) => {
-          if n > level {
+        LexItemIndent(n) => match n {
+          _ if n > level => {
             let delta = n - level;
             acc = push_to_list(acc, vec![repeat(delta, LexItemOpen)]);
             pointer += 1;
             level = n;
-          } else if n < level {
+          }
+          _ if n < level => {
             let delta = level - n;
             acc = push_to_list(
               acc,
@@ -316,8 +311,9 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             );
             pointer += 1;
             level = n;
-          } else {
-            if acc.len() == 0 {
+          }
+          _ => {
+            if acc.is_empty() {
               acc = vec![];
             } else {
               acc.push(LexItemClose);
@@ -325,7 +321,7 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             }
             pointer += 1;
           }
-        }
+        },
       }
     }
   }
@@ -342,5 +338,5 @@ pub fn parse(code: String) -> Result<CirruNode, String> {
   let tree = build_exprs(tokens);
   // println!("tree {:?}", tree);
   let v = CirruList(resolve_comma(resolve_dollar(tree)));
-  return Ok(v);
+  Ok(v)
 }
