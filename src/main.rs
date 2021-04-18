@@ -15,7 +15,7 @@ defn fib (n)
       fib (- n 2)
   "#;
 
-  match parse(String::from(demo)) {
+  match parse_cirru(String::from(demo)) {
     Ok(v) => {
       println!("{:?}", v);
       let writer_options = CirruWriterOptions { use_inline: false };

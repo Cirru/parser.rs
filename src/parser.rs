@@ -330,13 +330,18 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
 /// parse function, parse String to CirruNode.
 ///
 /// ```rs
-/// parse(String::from("def a 1"))
+/// parse_cirru(String::from("def a 1"))
 /// ```
-pub fn parse(code: String) -> Result<CirruNode, String> {
+pub fn parse_cirru(code: String) -> Result<CirruNode, String> {
   let tokens = resolve_indentations(lex(code));
   // println!("{:?}", tokens);
   let tree = build_exprs(tokens);
   // println!("tree {:?}", tree);
   let v = CirruList(resolve_comma(resolve_dollar(tree)));
   Ok(v)
+}
+
+#[deprecated(since = "0.0.8", note = "use parse_cirru instead")]
+pub fn parse(code: String) -> Result<CirruNode, String> {
+  parse_cirru(code)
 }

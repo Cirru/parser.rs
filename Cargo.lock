@@ -11,7 +11,7 @@ dependencies = [
 
 [[package]]
 name = "cirru_parser"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "modulo",
  "regex",

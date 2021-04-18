@@ -13,7 +13,7 @@ cargo install cirru_parser
 ```rs
 use cirru_parser::{parse};
 
-parse("defn f (x)\n  x");
+parse_cirru("defn f (x)\n  x");
 ```
 
 use writer:
