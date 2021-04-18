@@ -16,7 +16,7 @@ pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
   result
 }
 
-pub fn resolve_comma(xs: Vec<CirruNode>) -> Vec<CirruNode> {
+pub fn resolve_comma(xs: &[CirruNode]) -> Vec<CirruNode> {
   if xs.is_empty() {
     return vec![];
   } else {
@@ -24,9 +24,9 @@ pub fn resolve_comma(xs: Vec<CirruNode>) -> Vec<CirruNode> {
   }
 }
 
-fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
+fn comma_helper(intial_after: &[CirruNode]) -> Vec<CirruNode> {
   let mut before: Vec<CirruNode> = vec![];
-  let after: Vec<CirruNode> = intial_after;
+  let after: &[CirruNode] = intial_after;
 
   let mut pointer = 0;
 
@@ -34,20 +34,20 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
     if pointer >= after.len() {
       return before;
     }
-    let cursor = after[pointer].clone();
+    let cursor = &after[pointer];
     match cursor {
       CirruList(xs) => {
         if !xs.is_empty() {
-          let head = xs[0].clone();
+          let head = &xs[0];
           match head {
             CirruList(_) => {
-              before.push(CirruList(resolve_comma(xs)));
+              before.push(CirruList(resolve_comma(&xs)));
             }
             CirruLeaf(s) => {
               if s == "," {
-                before.extend(resolve_comma(xs[1..].to_vec()))
+                before.extend(resolve_comma(&xs[1..]))
               } else {
-                before.push(CirruList(resolve_comma(xs)));
+                before.push(CirruList(resolve_comma(&xs)));
               }
             }
           }
@@ -56,14 +56,14 @@ fn comma_helper(intial_after: Vec<CirruNode>) -> Vec<CirruNode> {
         }
       }
       CirruLeaf(_) => {
-        before.push(cursor);
+        before.push(cursor.clone());
       }
     }
     pointer += 1;
   }
 }
 
-pub fn resolve_dollar(xs: Vec<CirruNode>) -> Vec<CirruNode> {
+pub fn resolve_dollar(xs: &[CirruNode]) -> Vec<CirruNode> {
   if xs.is_empty() {
     return vec![];
   } else {
@@ -71,9 +71,9 @@ pub fn resolve_dollar(xs: Vec<CirruNode>) -> Vec<CirruNode> {
   }
 }
 
-fn dollar_helper(initial_after: Vec<CirruNode>) -> Vec<CirruNode> {
+fn dollar_helper(initial_after: &[CirruNode]) -> Vec<CirruNode> {
   let mut before: Vec<CirruNode> = vec![];
-  let after: Vec<CirruNode> = initial_after;
+  let after: &[CirruNode] = initial_after;
 
   let mut pointer = 0;
 
@@ -81,19 +81,19 @@ fn dollar_helper(initial_after: Vec<CirruNode>) -> Vec<CirruNode> {
     if pointer >= after.len() {
       return before;
     } else {
-      let cursor = after[pointer].clone();
+      let cursor = &after[pointer];
 
       match cursor {
         CirruList(xs) => {
-          before.push(CirruList(resolve_dollar(xs)));
+          before.push(CirruList(resolve_dollar(&xs)));
           pointer += 1;
         }
         CirruLeaf(s) => {
           if s == "$" {
-            before.push(CirruList(resolve_dollar(after[pointer + 1..].to_vec())));
+            before.push(CirruList(resolve_dollar(&after[pointer + 1..])));
             pointer = after.len();
           } else {
-            before.push(CirruLeaf(s));
+            before.push(CirruLeaf(s.to_string()));
             pointer += 1;
           }
         }

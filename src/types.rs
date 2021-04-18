@@ -40,8 +40,10 @@ impl fmt::Display for CirruNode {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       Self::CirruLeaf(a) => {
-        let re = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
-        if re.is_match(a) {
+        lazy_static! {
+          static ref RE_SIMPLE_TOKEN: Regex = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
+        }
+        if RE_SIMPLE_TOKEN.is_match(a) {
           write!(f, "{}", a)
         } else {
           write!(f, "\"{}\"", str::escape_debug(a))
