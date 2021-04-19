@@ -4,15 +4,13 @@ use std::fmt;
 use std::str;
 
 #[derive(PartialEq, Clone, Copy, fmt::Debug)]
-enum CirruWriterNode {
-  WriterNodeNil,
-  WriterNodeLeaf,
-  WriterNodeSimpleExpr,
-  WriterNodeBoxedExpr,
-  WriterNodeExpr,
+enum WriterNode {
+  Nil,
+  Leaf,
+  SimpleExpr,
+  BoxedExpr,
+  Expr,
 }
-
-use CirruWriterNode::*;
 
 const CHAR_CLOSE: char = ')';
 const CHAR_OPEN: char = '(';
@@ -21,65 +19,51 @@ const ALLOWED_CHARS: &str = "-~_@#$&%!?^*=+|\\/<>[]{}.,:;'";
 fn is_a_digit(c: char) -> bool {
   let n = c as usize;
   // ascii table https://tool.oschina.net/commons?type=4
-  n >= 48 && n <= 57
+  (48..=57).contains(&n)
 }
 
 fn is_a_letter(c: char) -> bool {
   let n = c as usize;
-  if n >= 65 && n <= 90 {
+  if (65..=90).contains(&n) {
     return true;
   }
-  if n >= 97 && n <= 122 {
+  if (97..=122).contains(&n) {
     return true;
   }
-  return false;
+  false
 }
 
-fn is_simple_expr(xs: CirruNode) -> bool {
-  match xs {
-    CirruList(ys) => {
-      for y in ys {
-        match y {
-          CirruList(_) => return false,
-          CirruLeaf(_) => (),
-        }
-      }
-      true
+fn is_simple_expr(ys: &[CirruNode]) -> bool {
+  for y in ys {
+    match y {
+      CirruList(_) => return false,
+      CirruLeaf(_) => (),
     }
-    CirruLeaf(_) => false,
   }
+  true
 }
 
-fn is_boxed(xs: CirruNode) -> bool {
-  match xs {
-    CirruList(ys) => {
-      for y in ys {
-        match y {
-          CirruLeaf(_) => return false,
-          _ => (),
-        }
-      }
-      return true;
+fn is_boxed(ys: &[CirruNode]) -> bool {
+  for y in ys {
+    if let CirruLeaf(_) = y {
+      return false;
     }
-    CirruLeaf(_) => false,
   }
+  true
 }
 
 fn is_simple_char(x: char) -> bool {
-  return is_a_digit(x) || is_a_letter(x);
+  is_a_digit(x) || is_a_letter(x)
 }
 
 fn is_char_allowed(x: char) -> bool {
   if is_simple_char(x) {
     return true;
   }
-  if let Some(_) = ALLOWED_CHARS.find(x) {
-    return true;
-  }
-  return false;
+  ALLOWED_CHARS.find(x).is_some()
 }
 
-fn generate_leaf(s: String) -> String {
+fn generate_leaf(s: &str) -> String {
   let mut all_allowed = true;
   for x in s.chars() {
     if !is_char_allowed(x) {
@@ -88,26 +72,29 @@ fn generate_leaf(s: String) -> String {
     }
   }
   if all_allowed {
-    s
+    s.to_string()
   } else {
-    format!(r#""{}""#, str::escape_debug(&s))
+    let mut ret = String::from("\"");
+    ret.push_str(&str::escape_debug(&s).to_string());
+    ret.push('"');
+    ret
   }
 }
 
 fn generate_empty_expr() -> String {
-  return String::from("()");
+  String::from("()")
 }
 
-fn generate_inline_expr(xs: Vec<CirruNode>) -> String {
+fn generate_inline_expr(xs: &[CirruNode]) -> String {
   let mut result = String::from(CHAR_OPEN);
 
   for (idx, x) in xs.iter().enumerate() {
     if idx > 0 {
-      result.push_str(" ");
+      result.push(' ');
     }
     let piece = match x {
-      CirruLeaf(s) => generate_leaf(s.to_string()),
-      CirruList(ys) => generate_inline_expr(ys.clone()),
+      CirruLeaf(s) => generate_leaf(s),
+      CirruList(ys) => generate_inline_expr(ys),
     };
     result.push_str(&piece)
   }
@@ -125,7 +112,9 @@ fn render_spaces(n: usize) -> String {
 }
 
 fn render_newline(n: usize) -> String {
-  format!("\n{}", render_spaces(n))
+  let mut ret = String::from("\n");
+  ret.push_str(&render_spaces(n));
+  ret
 }
 
 /// options for writer, `use_inline` for more compact format.
@@ -134,41 +123,39 @@ pub struct CirruWriterOptions {
   pub use_inline: bool,
 }
 
-fn get_node_kind(cursor: CirruNode) -> CirruWriterNode {
+fn get_node_kind(cursor: &CirruNode) -> WriterNode {
   match cursor {
-    CirruLeaf(_) => WriterNodeLeaf,
+    CirruLeaf(_) => WriterNode::Leaf,
     CirruList(xs) => {
-      if xs.clone().len() == 0 {
-        WriterNodeLeaf
-      } else if is_simple_expr(CirruList(xs.clone())) {
-        WriterNodeSimpleExpr
-      } else if is_boxed(CirruList(xs.clone())) {
-        WriterNodeBoxedExpr
+      if xs.is_empty() {
+        WriterNode::Leaf
+      } else if is_simple_expr(xs) {
+        WriterNode::SimpleExpr
+      } else if is_boxed(xs) {
+        WriterNode::BoxedExpr
       } else {
-        WriterNodeExpr
+        WriterNode::Expr
       }
     }
   }
 }
 
 fn generate_tree(
-  xs: Vec<CirruNode>,
+  xs: &[CirruNode],
   insist_head: bool,
   options: CirruWriterOptions,
   base_level: usize,
   in_tail: bool,
 ) -> String {
-  let mut prev_kind = WriterNodeNil;
-  let mut bended_size = 0;
+  let mut prev_kind = WriterNode::Nil;
   let mut level = base_level;
   let mut result = String::from("");
 
-  for (idx, _cursor) in xs.iter().enumerate() {
-    let cursor = _cursor.clone();
-    let kind = get_node_kind(cursor.clone());
+  for (idx, cursor) in xs.iter().enumerate() {
+    let kind = get_node_kind(cursor);
     let next_level = level + 1;
-    let child_insist_head = (prev_kind == WriterNodeBoxedExpr) || (prev_kind == WriterNodeExpr);
-    let at_tail = idx != 0 && !in_tail && prev_kind == WriterNodeLeaf && idx == xs.len() - 1;
+    let child_insist_head = (prev_kind == WriterNode::BoxedExpr) || (prev_kind == WriterNode::Expr);
+    let at_tail = idx != 0 && !in_tail && prev_kind == WriterNode::Leaf && idx == xs.len() - 1;
 
     // println!("\nloop {:?} {:?}", prev_kind, kind);
     // println!("cursor {:?}", cursor);
@@ -178,43 +165,55 @@ fn generate_tree(
       CirruLeaf(s) => generate_leaf(s),
       CirruList(ys) => {
         if at_tail {
-          if ys.len() == 0 {
+          if ys.is_empty() {
             String::from("$")
           } else {
-            format!("$ {}", generate_tree(ys, false, options, level, at_tail))
+            let mut ret = String::from("$ ");
+            ret.push_str(&generate_tree(&ys, false, options, level, at_tail));
+            ret
           }
         } else if idx == 0 && insist_head {
           generate_inline_expr(ys)
-        } else if kind == WriterNodeLeaf {
+        } else if kind == WriterNode::Leaf {
           generate_empty_expr() // special since empty expr is treated as leaf
-        } else if kind == WriterNodeSimpleExpr {
-          if prev_kind == WriterNodeLeaf {
+        } else if kind == WriterNode::SimpleExpr {
+          if prev_kind == WriterNode::Leaf {
             generate_inline_expr(ys)
-          } else if options.use_inline && prev_kind == WriterNodeSimpleExpr {
-            format!(" {}", generate_inline_expr(ys))
+          } else if options.use_inline && prev_kind == WriterNode::SimpleExpr {
+            let mut ret = String::from(" ");
+            ret.push_str(&generate_inline_expr(ys));
+            ret
           } else {
-            format!(
-              "{}{}",
-              render_newline(next_level),
-              &generate_tree(ys, child_insist_head, options, next_level, false,)
-            )
+            let mut ret = render_newline(next_level);
+            ret.push_str(&&generate_tree(
+              &ys,
+              child_insist_head,
+              options,
+              next_level,
+              false,
+            ));
+            ret
           }
-        } else if kind == WriterNodeExpr {
-          let content = generate_tree(ys, child_insist_head, options, next_level, false);
-          if content.starts_with("\n") {
+        } else if kind == WriterNode::Expr {
+          let content = generate_tree(&ys, child_insist_head, options, next_level, false);
+          if content.starts_with('\n') {
             content
           } else {
-            format!("{}{}", render_newline(next_level), content)
+            let mut ret = render_newline(next_level);
+            ret.push_str(&content);
+            ret
           }
-        } else if kind == WriterNodeBoxedExpr {
-          let content = generate_tree(ys, child_insist_head, options, next_level, false);
-          if prev_kind == WriterNodeNil
-            || prev_kind == WriterNodeLeaf
-            || prev_kind == WriterNodeSimpleExpr
+        } else if kind == WriterNode::BoxedExpr {
+          let content = generate_tree(&ys, child_insist_head, options, next_level, false);
+          if prev_kind == WriterNode::Nil
+            || prev_kind == WriterNode::Leaf
+            || prev_kind == WriterNode::SimpleExpr
           {
             content
           } else {
-            format!("{}{}", render_newline(next_level), &content)
+            let mut ret = render_newline(next_level);
+            ret.push_str(&content);
+            ret
           }
         } else {
           unreachable!("Unpected condition")
@@ -222,68 +221,67 @@ fn generate_tree(
       }
     };
 
-    let bended =
-      kind == WriterNodeLeaf && (prev_kind == WriterNodeBoxedExpr || prev_kind == WriterNodeExpr);
+    let bended = kind == WriterNode::Leaf
+      && (prev_kind == WriterNode::BoxedExpr || prev_kind == WriterNode::Expr);
 
-    let chunk = if at_tail {
-      format!(" {}", child)
-    } else if prev_kind == WriterNodeLeaf && kind == WriterNodeLeaf {
-      format!(" {}", child)
-    } else if prev_kind == WriterNodeLeaf && kind == WriterNodeSimpleExpr {
-      format!(" {}", child)
-    } else if prev_kind == WriterNodeSimpleExpr && kind == WriterNodeLeaf {
-      format!(" {}", child)
+    let chunk = if at_tail
+      || (prev_kind == WriterNode::Leaf && kind == WriterNode::Leaf)
+      || (prev_kind == WriterNode::Leaf && kind == WriterNode::SimpleExpr)
+      || prev_kind == WriterNode::SimpleExpr && kind == WriterNode::Leaf
+    {
+      let mut ret = String::from(" ");
+      ret.push_str(&child);
+      ret
     } else if bended {
-      format!("{}, {}", render_newline(next_level), child)
+      let mut ret = render_newline(next_level);
+      ret.push_str(", ");
+      ret.push_str(&child);
+      ret
     } else {
       child
     };
 
-    result = format!("{}{}", result, chunk);
+    result.push_str(&chunk);
 
     // update writer states
 
-    if kind == WriterNodeSimpleExpr {
+    if kind == WriterNode::SimpleExpr {
       if idx == 0 && insist_head {
-        prev_kind = WriterNodeSimpleExpr;
+        prev_kind = WriterNode::SimpleExpr;
       } else if options.use_inline {
-        if prev_kind == WriterNodeLeaf || prev_kind == WriterNodeSimpleExpr {
-          prev_kind = WriterNodeSimpleExpr;
+        if prev_kind == WriterNode::Leaf || prev_kind == WriterNode::SimpleExpr {
+          prev_kind = WriterNode::SimpleExpr;
         } else {
-          prev_kind = WriterNodeExpr;
+          prev_kind = WriterNode::Expr;
         }
+      } else if prev_kind == WriterNode::Leaf {
+        prev_kind = WriterNode::SimpleExpr;
       } else {
-        if prev_kind == WriterNodeLeaf {
-          prev_kind = WriterNodeSimpleExpr;
-        } else {
-          prev_kind = WriterNodeExpr;
-        }
+        prev_kind = WriterNode::Expr;
       }
     } else {
       prev_kind = kind;
     }
 
     if bended {
-      bended_size = bended_size + 1;
-      level = level + 1;
+      level += 1;
     }
 
     // console.log("chunk", JSON.stringify(chunk));
     // console.log("And result", JSON.stringify(result));
   }
-  return result;
+  result
 }
 
-fn generate_statements(ys: Vec<CirruNode>, options: CirruWriterOptions) -> String {
+fn generate_statements(ys: &[CirruNode], options: CirruWriterOptions) -> String {
   let mut zs = String::from("");
   for y in ys {
     match y {
       CirruLeaf(_) => unreachable!("expected an exprs at top level"),
       CirruList(cs) => {
-        zs.push_str(&format!(
-          "\n{}\n",
-          generate_tree(cs, true, options, 0, false)
-        ));
+        zs.push('\n');
+        zs.push_str(&generate_tree(cs, true, options, 0, false));
+        zs.push('\n');
       }
     }
   }
@@ -291,7 +289,7 @@ fn generate_statements(ys: Vec<CirruNode>, options: CirruWriterOptions) -> Strin
 }
 
 /// format Cirru code, use options to control `use_inline` option
-pub fn write_cirru(xs: CirruNode, options: CirruWriterOptions) -> String {
+pub fn write_cirru(xs: &CirruNode, options: CirruWriterOptions) -> String {
   match xs {
     CirruLeaf(_) => unreachable!("expected vector of exprs"),
     CirruList(ys) => generate_statements(ys, options),

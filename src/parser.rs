@@ -23,6 +23,9 @@ parses to:
 find more on <http://text.cirru.org/> .
 */
 
+#[macro_use]
+extern crate lazy_static;
+
 mod tree;
 mod types;
 mod writer;
@@ -49,7 +52,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
     }
     let c = tokens[idx].clone();
     idx += 1;
-    return Some(c);
+    Some(c)
   };
   loop {
     let chunk = pull_token(); // TODO Option
@@ -62,7 +65,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
           let cursor = pull_token(); // TODO Option
           match cursor {
             Some(LexItemClose) => {
-              if pointer_stack.len() == 0 {
+              if pointer_stack.is_empty() {
                 acc.push(CirruList(pointer.clone()));
                 break;
               } else {
@@ -99,168 +102,156 @@ fn parse_indentation(buffer: String) -> CirruLexItem {
   if size.modulo(2) == 1 {
     panic!("odd indentation size")
   }
-  return LexItemIndent(size / 2);
+  LexItemIndent(size / 2)
 }
 
 /// internal function for lexing
-pub fn lex(initial_code: String) -> CirruLexItemList {
+pub fn lex(initial_code: &str) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut state = LexStateIndent;
   let mut buffer = String::from("");
   let code = initial_code;
-  let mut count = 0;
 
-  let mut pointer = 0;
-
-  loop {
-    count += 1;
-    if count > 10000 {
-      println!("pointer: {} , code: {}, state: {:?}", pointer, code, state);
-      panic!("looped too many times")
-    }
-    if pointer >= code.len() {
-      match state {
-        LexStateSpace => return acc,
-        LexStateToken => {
-          acc.push(LexItemString(buffer.clone())); // TODO why clone?
-          return acc;
+  for c in code.chars() {
+    match state {
+      LexStateSpace => match c {
+        ' ' => {
+          state = LexStateSpace;
+          buffer = String::from("");
         }
-        LexStateEscape => panic!("unknown escape"),
-        LexStateIndent => return acc,
-        LexStateString => panic!("finished at string"),
-      }
-    } else {
-      let c = code.chars().nth(pointer).unwrap();
-      pointer += 1;
-      match state {
-        LexStateSpace => match c {
-          ' ' => {
-            state = LexStateSpace;
-            buffer = String::from("");
-          }
-          '\n' => {
-            state = LexStateIndent;
-            buffer = String::from("");
-          }
-          '(' => {
-            acc.push(LexItemOpen);
-            state = LexStateSpace;
-            buffer = String::from("")
-          }
-          ')' => {
-            acc.push(LexItemClose);
-            state = LexStateSpace;
-            buffer = String::from("")
-          }
-          '"' => {
-            state = LexStateString;
-            buffer = String::from("");
-          }
-          _ => {
-            state = LexStateToken;
-            buffer = String::from(c)
-          }
-        },
-        LexStateToken => match c {
-          ' ' => {
-            acc.push(LexItemString(buffer));
-            state = LexStateSpace;
-            buffer = String::from("");
-          }
-          '"' => {
-            acc.push(LexItemString(buffer));
-            state = LexStateString;
-            buffer = String::from("");
-          }
-          '\n' => {
-            acc.push(LexItemString(buffer));
-            state = LexStateIndent;
-            buffer = String::from("");
-          }
-          '(' => {
-            acc.push(LexItemString(buffer));
-            acc.push(LexItemOpen);
-            state = LexStateSpace;
-            buffer = String::from("")
-          }
-          ')' => {
-            acc.push(LexItemString(buffer));
-            acc.push(LexItemClose);
-            state = LexStateSpace;
-            buffer = String::from("")
-          }
-          _ => {
-            state = LexStateToken;
-            buffer = format!("{}{}", buffer, c);
-          }
-        },
-        LexStateString => match c {
-          '"' => {
-            acc.push(LexItemString(buffer));
-            state = LexStateSpace;
-            buffer = String::from("");
-          }
-          '\\' => {
-            state = LexStateEscape;
-          }
-          '\n' => {
-            panic!("unexpected newline in string");
-          }
-          _ => {
-            state = LexStateString;
-            buffer = format!("{}{}", buffer, c);
-          }
-        },
-        LexStateEscape => match c {
-          '"' => {
-            state = LexStateString;
-            buffer = format!("{}{}", buffer, '"');
-          }
-          't' => {
-            state = LexStateString;
-            buffer = format!("{}{}", buffer, '\t');
-          }
-          'n' => {
-            state = LexStateString;
-            buffer = format!("{}{}", buffer, '\n');
-          }
-          '\\' => {
-            state = LexStateString;
-            buffer = format!("{}{}", buffer, '\\');
-          }
-          _ => panic!("unexpected character during string escaping"),
-        },
-        LexStateIndent => match c {
-          ' ' => {
-            state = LexStateIndent;
-            buffer = format!("{}{}", buffer, c);
-          }
-          '\n' => {
-            state = LexStateIndent;
-            buffer = String::from("");
-          }
-          '"' => {
-            acc.push(parse_indentation(buffer));
-            state = LexStateString;
-            buffer = String::from("");
-          }
-          '(' => {
-            acc.push(parse_indentation(buffer));
-            acc.push(LexItemOpen);
-            state = LexStateSpace;
-            buffer = String::from("");
-          }
-          ')' => {
-            panic!("unexpected ) at line start")
-          }
-          _ => {
-            acc.push(parse_indentation(buffer));
-            state = LexStateToken;
-            buffer = String::from(c);
-          }
-        },
-      }
+        '\n' => {
+          state = LexStateIndent;
+          buffer = String::from("");
+        }
+        '(' => {
+          acc.push(LexItemOpen);
+          state = LexStateSpace;
+          buffer = String::from("")
+        }
+        ')' => {
+          acc.push(LexItemClose);
+          state = LexStateSpace;
+          buffer = String::from("")
+        }
+        '"' => {
+          state = LexStateString;
+          buffer = String::from("");
+        }
+        _ => {
+          state = LexStateToken;
+          buffer = String::from(c)
+        }
+      },
+      LexStateToken => match c {
+        ' ' => {
+          acc.push(LexItemString(buffer));
+          state = LexStateSpace;
+          buffer = String::from("");
+        }
+        '"' => {
+          acc.push(LexItemString(buffer));
+          state = LexStateString;
+          buffer = String::from("");
+        }
+        '\n' => {
+          acc.push(LexItemString(buffer));
+          state = LexStateIndent;
+          buffer = String::from("");
+        }
+        '(' => {
+          acc.push(LexItemString(buffer));
+          acc.push(LexItemOpen);
+          state = LexStateSpace;
+          buffer = String::from("")
+        }
+        ')' => {
+          acc.push(LexItemString(buffer));
+          acc.push(LexItemClose);
+          state = LexStateSpace;
+          buffer = String::from("")
+        }
+        _ => {
+          state = LexStateToken;
+          buffer.push(c);
+        }
+      },
+      LexStateString => match c {
+        '"' => {
+          acc.push(LexItemString(buffer));
+          state = LexStateSpace;
+          buffer = String::from("");
+        }
+        '\\' => {
+          state = LexStateEscape;
+        }
+        '\n' => {
+          panic!("unexpected newline in string");
+        }
+        _ => {
+          state = LexStateString;
+          buffer.push(c);
+        }
+      },
+      LexStateEscape => match c {
+        '"' => {
+          state = LexStateString;
+          buffer.push('"');
+        }
+        't' => {
+          state = LexStateString;
+          buffer.push('\t');
+        }
+        'n' => {
+          state = LexStateString;
+          buffer.push('\n');
+        }
+        '\\' => {
+          state = LexStateString;
+          buffer.push('\\');
+        }
+        _ => panic!("unexpected character during string escaping"),
+      },
+      LexStateIndent => match c {
+        ' ' => {
+          state = LexStateIndent;
+          buffer.push(c);
+        }
+        '\n' => {
+          state = LexStateIndent;
+          buffer = String::from("");
+        }
+        '"' => {
+          acc.push(parse_indentation(buffer));
+          state = LexStateString;
+          buffer = String::from("");
+        }
+        '(' => {
+          acc.push(parse_indentation(buffer));
+          acc.push(LexItemOpen);
+          state = LexStateSpace;
+          buffer = String::from("");
+        }
+        ')' => {
+          panic!("unexpected ) at line start")
+        }
+        _ => {
+          acc.push(parse_indentation(buffer));
+          state = LexStateToken;
+          buffer = String::from(c);
+        }
+      },
     }
+  }
+
+  match state {
+    LexStateSpace => acc,
+    LexStateToken => {
+      acc.push(LexItemString(buffer));
+      acc
+    }
+    LexStateEscape => panic!("unknown escape"),
+    LexStateIndent => acc,
+    LexStateString => panic!("finished at string"),
   }
 }
 
@@ -280,7 +271,7 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
   let mut pointer = 0;
   loop {
     if pointer >= tokens.len() {
-      if acc.len() == 0 {
+      if acc.is_empty() {
         return vec![];
       } else {
         acc.insert(0, LexItemOpen);
@@ -302,13 +293,14 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
           acc.push(LexItemClose);
           pointer += 1;
         }
-        LexItemIndent(n) => {
-          if n > level {
+        LexItemIndent(n) => match n {
+          _ if n > level => {
             let delta = n - level;
             acc = push_to_list(acc, vec![repeat(delta, LexItemOpen)]);
             pointer += 1;
             level = n;
-          } else if n < level {
+          }
+          _ if n < level => {
             let delta = level - n;
             acc = push_to_list(
               acc,
@@ -316,8 +308,9 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             );
             pointer += 1;
             level = n;
-          } else {
-            if acc.len() == 0 {
+          }
+          _ => {
+            if acc.is_empty() {
               acc = vec![];
             } else {
               acc.push(LexItemClose);
@@ -325,7 +318,7 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             }
             pointer += 1;
           }
-        }
+        },
       }
     }
   }
@@ -334,13 +327,18 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
 /// parse function, parse String to CirruNode.
 ///
 /// ```rs
-/// parse(String::from("def a 1"))
+/// parse_cirru(String::from("def a 1"))
 /// ```
-pub fn parse(code: String) -> Result<CirruNode, String> {
-  let tokens = resolve_indentations(lex(code));
+pub fn parse_cirru(code: String) -> Result<CirruNode, String> {
+  let tokens = resolve_indentations(lex(&code));
   // println!("{:?}", tokens);
   let tree = build_exprs(tokens);
   // println!("tree {:?}", tree);
-  let v = CirruList(resolve_comma(resolve_dollar(tree)));
-  return Ok(v);
+  let v = CirruList(resolve_comma(&resolve_dollar(&tree)));
+  Ok(v)
+}
+
+#[deprecated(since = "0.0.8", note = "use parse_cirru instead")]
+pub fn parse(code: String) -> Result<CirruNode, String> {
+  parse_cirru(code)
 }

@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.0.6"
+version = "0.0.9"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -22,6 +22,7 @@ exclude = [
 modulo = "0.1.2"
 serde_json = "1.0.64"
 regex = "1"
+lazy_static = "1.4.0"
 
 [lib]
 name = "cirru_parser"

@@ -1,13 +1,14 @@
 use std::clone::Clone;
 use std::cmp::Ordering;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::str;
 // use std::marker::Copy;
 
 use regex::Regex;
 
 /// Cirru uses nested Vecters and Strings as data structure
-#[derive(Clone, Hash)]
+#[derive(Clone)]
 pub enum CirruNode {
   CirruLeaf(String),
   CirruList(Vec<CirruNode>),
@@ -39,8 +40,10 @@ impl fmt::Display for CirruNode {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       Self::CirruLeaf(a) => {
-        let re = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
-        if re.is_match(a) {
+        lazy_static! {
+          static ref RE_SIMPLE_TOKEN: Regex = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
+        }
+        if RE_SIMPLE_TOKEN.is_match(a) {
           write!(f, "{}", a)
         } else {
           write!(f, "\"{}\"", str::escape_debug(a))
@@ -98,11 +101,31 @@ impl PartialOrd for CirruNode {
   }
 }
 
+impl Hash for CirruNode {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    match self {
+      CirruLeaf(s) => {
+        s.hash(state);
+      }
+      CirruList(xs) => {
+        xs.hash(state);
+      }
+    }
+  }
+}
+
 impl CirruNode {
   pub fn len(&self) -> usize {
     match self {
       CirruLeaf(s) => s.len(),
       CirruList(xs) => xs.len(),
+    }
+  }
+
+  pub fn is_empty(&self) -> bool {
+    match self {
+      CirruLeaf(s) => s.len() == 0,
+      CirruList(xs) => xs.len() == 0,
     }
   }
 }
