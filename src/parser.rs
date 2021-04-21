@@ -37,14 +37,13 @@ use modulo::Mod;
 use tree::{push_to_list, resolve_comma, resolve_dollar};
 use types::CirruLexItem::*;
 use types::CirruLexState::*;
-use types::CirruNode::*;
 
 pub use json::*;
-pub use types::{CirruLexItem, CirruLexItemList, CirruNode};
+pub use types::{Cirru, CirruLexItem, CirruLexItemList};
 pub use writer::*;
 
-fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
-  let mut acc: Vec<CirruNode> = vec![];
+fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<Cirru> {
+  let mut acc: Vec<Cirru> = vec![];
   let mut idx = 0;
   let mut pull_token = || {
     if idx >= tokens.len() {
@@ -59,14 +58,14 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
 
     match chunk {
       Some(LexItemOpen) => {
-        let mut pointer: Vec<CirruNode> = vec![];
-        let mut pointer_stack: Vec<Vec<CirruNode>> = vec![];
+        let mut pointer: Vec<Cirru> = vec![];
+        let mut pointer_stack: Vec<Vec<Cirru>> = vec![];
         loop {
           let cursor = pull_token(); // TODO Option
           match cursor {
             Some(LexItemClose) => {
               if pointer_stack.is_empty() {
-                acc.push(CirruList(pointer.clone()));
+                acc.push(Cirru::List(pointer.clone()));
                 break;
               } else {
                 let v = pointer_stack.pop();
@@ -74,7 +73,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
                 match v {
                   Some(collected) => {
                     pointer = collected;
-                    pointer.push(CirruList(prev_p))
+                    pointer.push(Cirru::List(prev_p))
                   }
                   None => unreachable!(),
                 }
@@ -84,7 +83,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Vec<CirruNode> {
               pointer_stack.push(pointer);
               pointer = vec![];
             }
-            Some(LexItemString(s)) => pointer.push(CirruLeaf(s)),
+            Some(LexItemString(s)) => pointer.push(Cirru::Leaf(s)),
             Some(LexItemIndent(_)) => unreachable!(),
             None => unreachable!("unexpected end of file"),
           }
@@ -324,21 +323,16 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
   }
 }
 
-/// parse function, parse String to CirruNode.
+/// parse function, parse String to Cirru.
 ///
 /// ```rs
-/// parse_cirru(String::from("def a 1"))
+/// parse(String::from("def a 1"))
 /// ```
-pub fn parse_cirru(code: String) -> Result<CirruNode, String> {
-  let tokens = resolve_indentations(lex(&code));
+pub fn parse(code: &str) -> Result<Cirru, String> {
+  let tokens = resolve_indentations(lex(code));
   // println!("{:?}", tokens);
   let tree = build_exprs(tokens);
   // println!("tree {:?}", tree);
-  let v = CirruList(resolve_comma(&resolve_dollar(&tree)));
+  let v = Cirru::List(resolve_comma(&resolve_dollar(&tree)));
   Ok(v)
-}
-
-#[deprecated(since = "0.0.8", note = "use parse_cirru instead")]
-pub fn parse(code: String) -> Result<CirruNode, String> {
-  parse_cirru(code)
 }
