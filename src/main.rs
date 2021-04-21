@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-use cirru_parser::CirruNode::*;
+use cirru_parser::Cirru;
 use cirru_parser::*;
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
@@ -24,21 +24,21 @@ defn fib (n)
   let large_demo = "/Users/chen/repo/calcit-lang/runner.rs/src/cirru/calcit-core.cirru";
   let content = fs::read_to_string(large_demo).unwrap();
 
-  match parse_cirru(content) {
+  match parse(&content) {
     Ok(v) => {
       let writer_options = CirruWriterOptions { use_inline: false };
-      println!("{}", write_cirru(&v, writer_options));
+      println!("{}", format(&v, writer_options));
     }
     Err(e) => println!("{:?}", e),
   }
 
   // println!(
   //   "{} {}",
-  //   CirruLeaf(String::from("a")) < CirruLeaf(String::from("b")),
-  //   CirruList(vec![CirruLeaf(String::from("a"))]) < CirruLeaf(String::from("b"))
+  //   Cirru::Leaf(String::from("a")) < Cirru::Leaf(String::from("b")),
+  //   Cirru::List(vec![Cirru::Leaf(String::from("a"))]) < Cirru::Leaf(String::from("b"))
   // );
 
   // let mut hasher = DefaultHasher::new();
-  // CirruLeaf(String::from("a")).hash(&mut hasher);
+  // Cirru::Leaf(String::from("a")).hash(&mut hasher);
   // println!("{:x}", hasher.finish());
 }

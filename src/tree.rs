@@ -2,8 +2,7 @@ use crate::types;
 
 pub use types::*;
 
-pub use types::CirruNode;
-pub use types::CirruNode::*;
+pub use types::Cirru;
 
 // mutable to acc
 pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
@@ -16,7 +15,7 @@ pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
   result
 }
 
-pub fn resolve_comma(xs: &[CirruNode]) -> Vec<CirruNode> {
+pub fn resolve_comma(xs: &[Cirru]) -> Vec<Cirru> {
   if xs.is_empty() {
     return vec![];
   } else {
@@ -24,9 +23,9 @@ pub fn resolve_comma(xs: &[CirruNode]) -> Vec<CirruNode> {
   }
 }
 
-fn comma_helper(intial_after: &[CirruNode]) -> Vec<CirruNode> {
-  let mut before: Vec<CirruNode> = vec![];
-  let after: &[CirruNode] = intial_after;
+fn comma_helper(intial_after: &[Cirru]) -> Vec<Cirru> {
+  let mut before: Vec<Cirru> = vec![];
+  let after: &[Cirru] = intial_after;
 
   let mut pointer = 0;
 
@@ -36,26 +35,26 @@ fn comma_helper(intial_after: &[CirruNode]) -> Vec<CirruNode> {
     }
     let cursor = &after[pointer];
     match cursor {
-      CirruList(xs) => {
+      Cirru::List(xs) => {
         if !xs.is_empty() {
           let head = &xs[0];
           match head {
-            CirruList(_) => {
-              before.push(CirruList(resolve_comma(&xs)));
+            Cirru::List(_) => {
+              before.push(Cirru::List(resolve_comma(&xs)));
             }
-            CirruLeaf(s) => {
+            Cirru::Leaf(s) => {
               if s == "," {
                 before.extend(resolve_comma(&xs[1..]))
               } else {
-                before.push(CirruList(resolve_comma(&xs)));
+                before.push(Cirru::List(resolve_comma(&xs)));
               }
             }
           }
         } else {
-          before.push(CirruList(vec![]));
+          before.push(Cirru::List(vec![]));
         }
       }
-      CirruLeaf(_) => {
+      Cirru::Leaf(_) => {
         before.push(cursor.clone());
       }
     }
@@ -63,7 +62,7 @@ fn comma_helper(intial_after: &[CirruNode]) -> Vec<CirruNode> {
   }
 }
 
-pub fn resolve_dollar(xs: &[CirruNode]) -> Vec<CirruNode> {
+pub fn resolve_dollar(xs: &[Cirru]) -> Vec<Cirru> {
   if xs.is_empty() {
     return vec![];
   } else {
@@ -71,9 +70,9 @@ pub fn resolve_dollar(xs: &[CirruNode]) -> Vec<CirruNode> {
   }
 }
 
-fn dollar_helper(initial_after: &[CirruNode]) -> Vec<CirruNode> {
-  let mut before: Vec<CirruNode> = vec![];
-  let after: &[CirruNode] = initial_after;
+fn dollar_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
+  let mut before: Vec<Cirru> = vec![];
+  let after: &[Cirru] = initial_after;
 
   let mut pointer = 0;
 
@@ -84,16 +83,16 @@ fn dollar_helper(initial_after: &[CirruNode]) -> Vec<CirruNode> {
       let cursor = &after[pointer];
 
       match cursor {
-        CirruList(xs) => {
-          before.push(CirruList(resolve_dollar(&xs)));
+        Cirru::List(xs) => {
+          before.push(Cirru::List(resolve_dollar(&xs)));
           pointer += 1;
         }
-        CirruLeaf(s) => {
+        Cirru::Leaf(s) => {
           if s == "$" {
-            before.push(CirruList(resolve_dollar(&after[pointer + 1..])));
+            before.push(Cirru::List(resolve_dollar(&after[pointer + 1..])));
             pointer = after.len();
           } else {
-            before.push(CirruLeaf(s.to_string()));
+            before.push(Cirru::Leaf(s.to_string()));
             pointer += 1;
           }
         }

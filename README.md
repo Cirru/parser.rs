@@ -13,16 +13,16 @@ cargo install cirru_parser
 ```rs
 use cirru_parser::{parse};
 
-parse_cirru("defn f (x)\n  x");
+parse("defn f (x)\n  x");
 ```
 
 use writer:
 
 ```rs
-use cirru_parser::{write_cirru, CirruWriterOptions}
+use cirru_parser::{format, CirruWriterOptions}
 
 let writer_options = CirruWriterOptions { use_inline: false };
-write_cirru(tree, writer_options)
+format(tree, writer_options)
 ```
 
 ### License

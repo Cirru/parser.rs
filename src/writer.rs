@@ -1,5 +1,4 @@
-use crate::types::CirruNode;
-use crate::types::CirruNode::*;
+use crate::types::Cirru;
 use std::fmt;
 use std::str;
 
@@ -33,19 +32,19 @@ fn is_a_letter(c: char) -> bool {
   false
 }
 
-fn is_simple_expr(ys: &[CirruNode]) -> bool {
+fn is_simple_expr(ys: &[Cirru]) -> bool {
   for y in ys {
     match y {
-      CirruList(_) => return false,
-      CirruLeaf(_) => (),
+      Cirru::List(_) => return false,
+      Cirru::Leaf(_) => (),
     }
   }
   true
 }
 
-fn is_boxed(ys: &[CirruNode]) -> bool {
+fn is_boxed(ys: &[Cirru]) -> bool {
   for y in ys {
-    if let CirruLeaf(_) = y {
+    if let Cirru::Leaf(_) = y {
       return false;
     }
   }
@@ -85,7 +84,7 @@ fn generate_empty_expr() -> String {
   String::from("()")
 }
 
-fn generate_inline_expr(xs: &[CirruNode]) -> String {
+fn generate_inline_expr(xs: &[Cirru]) -> String {
   let mut result = String::from(CHAR_OPEN);
 
   for (idx, x) in xs.iter().enumerate() {
@@ -93,8 +92,8 @@ fn generate_inline_expr(xs: &[CirruNode]) -> String {
       result.push(' ');
     }
     let piece = match x {
-      CirruLeaf(s) => generate_leaf(s),
-      CirruList(ys) => generate_inline_expr(ys),
+      Cirru::Leaf(s) => generate_leaf(s),
+      Cirru::List(ys) => generate_inline_expr(ys),
     };
     result.push_str(&piece)
   }
@@ -123,10 +122,10 @@ pub struct CirruWriterOptions {
   pub use_inline: bool,
 }
 
-fn get_node_kind(cursor: &CirruNode) -> WriterNode {
+fn get_node_kind(cursor: &Cirru) -> WriterNode {
   match cursor {
-    CirruLeaf(_) => WriterNode::Leaf,
-    CirruList(xs) => {
+    Cirru::Leaf(_) => WriterNode::Leaf,
+    Cirru::List(xs) => {
       if xs.is_empty() {
         WriterNode::Leaf
       } else if is_simple_expr(xs) {
@@ -141,7 +140,7 @@ fn get_node_kind(cursor: &CirruNode) -> WriterNode {
 }
 
 fn generate_tree(
-  xs: &[CirruNode],
+  xs: &[Cirru],
   insist_head: bool,
   options: CirruWriterOptions,
   base_level: usize,
@@ -162,8 +161,8 @@ fn generate_tree(
     // println!("{}", str::escape_debug(&result));
 
     let child: String = match cursor {
-      CirruLeaf(s) => generate_leaf(s),
-      CirruList(ys) => {
+      Cirru::Leaf(s) => generate_leaf(s),
+      Cirru::List(ys) => {
         if at_tail {
           if ys.is_empty() {
             String::from("$")
@@ -273,12 +272,12 @@ fn generate_tree(
   result
 }
 
-fn generate_statements(ys: &[CirruNode], options: CirruWriterOptions) -> String {
+fn generate_statements(ys: &[Cirru], options: CirruWriterOptions) -> String {
   let mut zs = String::from("");
   for y in ys {
     match y {
-      CirruLeaf(_) => unreachable!("expected an exprs at top level"),
-      CirruList(cs) => {
+      Cirru::Leaf(_) => unreachable!("expected an exprs at top level"),
+      Cirru::List(cs) => {
         zs.push('\n');
         zs.push_str(&generate_tree(cs, true, options, 0, false));
         zs.push('\n');
@@ -289,9 +288,9 @@ fn generate_statements(ys: &[CirruNode], options: CirruWriterOptions) -> String 
 }
 
 /// format Cirru code, use options to control `use_inline` option
-pub fn write_cirru(xs: &CirruNode, options: CirruWriterOptions) -> String {
+pub fn format(xs: &Cirru, options: CirruWriterOptions) -> String {
   match xs {
-    CirruLeaf(_) => unreachable!("expected vector of exprs"),
-    CirruList(ys) => generate_statements(ys, options),
+    Cirru::Leaf(_) => unreachable!("expected vector of exprs"),
+    Cirru::List(ys) => generate_statements(ys, options),
   }
 }

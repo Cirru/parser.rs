@@ -9,9 +9,9 @@ use regex::Regex;
 
 /// Cirru uses nested Vecters and Strings as data structure
 #[derive(Clone)]
-pub enum CirruNode {
-  CirruLeaf(String),
-  CirruList(Vec<CirruNode>),
+pub enum Cirru {
+  Leaf(String),
+  List(Vec<Cirru>),
 }
 
 #[derive(fmt::Debug, PartialEq)]
@@ -34,12 +34,10 @@ pub enum CirruLexItem {
 
 pub type CirruLexItemList = Vec<CirruLexItem>;
 
-use CirruNode::{CirruLeaf, CirruList};
-
-impl fmt::Display for CirruNode {
+impl fmt::Display for Cirru {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
-      Self::CirruLeaf(a) => {
+      Cirru::Leaf(a) => {
         lazy_static! {
           static ref RE_SIMPLE_TOKEN: Regex = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
         }
@@ -49,7 +47,7 @@ impl fmt::Display for CirruNode {
           write!(f, "\"{}\"", str::escape_debug(a))
         }
       }
-      Self::CirruList(xs) => {
+      Cirru::List(xs) => {
         write!(f, "(")?;
         for (idx, x) in xs.iter().enumerate() {
           if idx > 0 {
@@ -64,7 +62,7 @@ impl fmt::Display for CirruNode {
   }
 }
 
-impl fmt::Debug for CirruNode {
+impl fmt::Debug for Cirru {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     // just use fn from Display
     write!(f, "{}", format!("{}", self))?;
@@ -72,60 +70,60 @@ impl fmt::Debug for CirruNode {
   }
 }
 
-impl Eq for CirruNode {}
+impl Eq for Cirru {}
 
-impl PartialEq for CirruNode {
+impl PartialEq for Cirru {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
-      (Self::CirruLeaf(a), Self::CirruLeaf(b)) => a == b,
-      (Self::CirruList(a), Self::CirruList(b)) => a == b,
+      (Self::Leaf(a), Self::Leaf(b)) => a == b,
+      (Self::List(a), Self::List(b)) => a == b,
       (_, _) => false,
     }
   }
 }
 
-impl Ord for CirruNode {
+impl Ord for Cirru {
   fn cmp(&self, other: &Self) -> Ordering {
     match (self, other) {
-      (CirruLeaf(a), CirruLeaf(b)) => a.cmp(b),
-      (CirruLeaf(_), CirruList(_)) => Ordering::Less,
-      (CirruList(_), CirruLeaf(_)) => Ordering::Greater,
-      (CirruList(a), CirruList(b)) => a.cmp(b),
+      (Self::Leaf(a), Self::Leaf(b)) => a.cmp(b),
+      (Self::Leaf(_), Self::List(_)) => Ordering::Less,
+      (Self::List(_), Self::Leaf(_)) => Ordering::Greater,
+      (Self::List(a), Self::List(b)) => a.cmp(b),
     }
   }
 }
 
-impl PartialOrd for CirruNode {
+impl PartialOrd for Cirru {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
     Some(self.cmp(other))
   }
 }
 
-impl Hash for CirruNode {
+impl Hash for Cirru {
   fn hash<H: Hasher>(&self, state: &mut H) {
     match self {
-      CirruLeaf(s) => {
+      Self::Leaf(s) => {
         s.hash(state);
       }
-      CirruList(xs) => {
+      Self::List(xs) => {
         xs.hash(state);
       }
     }
   }
 }
 
-impl CirruNode {
+impl Cirru {
   pub fn len(&self) -> usize {
     match self {
-      CirruLeaf(s) => s.len(),
-      CirruList(xs) => xs.len(),
+      Self::Leaf(s) => s.len(),
+      Self::List(xs) => xs.len(),
     }
   }
 
   pub fn is_empty(&self) -> bool {
     match self {
-      CirruLeaf(s) => s.len() == 0,
-      CirruList(xs) => xs.len() == 0,
+      Self::Leaf(s) => s.len() == 0,
+      Self::List(xs) => xs.len() == 0,
     }
   }
 }
