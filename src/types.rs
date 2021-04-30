@@ -34,17 +34,18 @@ pub enum CirruLexItem {
 
 pub type CirruLexItemList = Vec<CirruLexItem>;
 
+lazy_static! {
+  static ref RE_SIMPLE_TOKEN: Regex = Regex::new(r"^[\w\d\-\?!\+\*\$@!#%&_=|:\.<>]+$").unwrap();
+}
+
 impl fmt::Display for Cirru {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       Cirru::Leaf(a) => {
-        lazy_static! {
-          static ref RE_SIMPLE_TOKEN: Regex = Regex::new(r"^[\w\d\-\?!]+$").unwrap();
-        }
         if RE_SIMPLE_TOKEN.is_match(a) {
           write!(f, "{}", a)
         } else {
-          write!(f, "\"{}\"", str::escape_debug(a))
+          write!(f, "{}", escape_cirru_leaf(a))
         }
       }
       Cirru::List(xs) => {
@@ -55,18 +56,33 @@ impl fmt::Display for Cirru {
           }
           write!(f, "{}", x)?;
         }
-        write!(f, ")")?;
-        Ok(())
+        write!(f, ")")
       }
     }
   }
 }
 
+/// common API for turning Cirru leaf with strings escaped
+/// ```rust
+/// use cirru_parser::escape_cirru_leaf;
+/// escape_cirru_leaf("a"); // "\"a\""
+/// escape_cirru_leaf("a b"); // "\"a b\""
+/// ```
+pub fn escape_cirru_leaf(s: &str) -> String {
+  let mut chunk = String::from("\"");
+  if RE_SIMPLE_TOKEN.is_match(s) {
+    chunk.push_str(s);
+  } else {
+    chunk.push_str(&s.escape_default().to_string());
+  }
+  chunk.push('"');
+  chunk
+}
+
 impl fmt::Debug for Cirru {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     // just use fn from Display
-    write!(f, "{}", format!("{}", self))?;
-    Ok(())
+    write!(f, "{}", format!("{}", self))
   }
 }
 

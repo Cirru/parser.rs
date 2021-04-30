@@ -19,10 +19,12 @@ parse("defn f (x)\n  x");
 use writer:
 
 ```rs
-use cirru_parser::{format, CirruWriterOptions}
+use cirru_parser::{format, CirruWriterOptions, escape_cirru_leaf}
 
 let writer_options = CirruWriterOptions { use_inline: false };
-format(tree, writer_options)
+format(tree, writer_options);
+
+escape_cirru_leaf("a b");
 ```
 
 ### License

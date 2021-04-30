@@ -27,7 +27,7 @@ defn fib (n)
   match parse(&content) {
     Ok(v) => {
       let writer_options = CirruWriterOptions { use_inline: false };
-      println!("{}", format(&v, writer_options));
+      println!("{}", format(&v, writer_options).unwrap());
     }
     Err(e) => println!("{:?}", e),
   }

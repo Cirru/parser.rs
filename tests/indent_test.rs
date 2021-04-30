@@ -2,9 +2,9 @@ use cirru_parser::CirruLexItem::*;
 use cirru_parser::{lex, resolve_indentations};
 
 #[test]
-fn handle_indentation() {
+fn handle_indentation() -> Result<(), String> {
   assert_eq!(
-    resolve_indentations(lex("a\nb")),
+    resolve_indentations(lex("a\nb")?),
     vec![
       LexItemOpen,
       LexItemString(String::from("a")),
@@ -15,7 +15,7 @@ fn handle_indentation() {
     ]
   );
   assert_eq!(
-    resolve_indentations(lex("a\n  b\nc")),
+    resolve_indentations(lex("a\n  b\nc")?),
     vec![
       LexItemOpen,
       LexItemString(String::from("a")),
@@ -29,7 +29,7 @@ fn handle_indentation() {
     ]
   );
   assert_eq!(
-    resolve_indentations(lex("a\n  b c\nd")),
+    resolve_indentations(lex("a\n  b c\nd")?),
     vec![
       LexItemOpen,
       LexItemString(String::from("a")),
@@ -44,7 +44,7 @@ fn handle_indentation() {
     ]
   );
   assert_eq!(
-    resolve_indentations(lex("a\n    b c\n    d e\n  f")),
+    resolve_indentations(lex("a\n    b c\n    d e\n  f")?),
     vec![
       LexItemOpen,
       LexItemString(String::from("a")),
@@ -64,4 +64,5 @@ fn handle_indentation() {
       LexItemClose,
     ]
   );
+  Ok(())
 }
