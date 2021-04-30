@@ -11,10 +11,9 @@ dependencies = [
 
 [[package]]
 name = "cirru_parser"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "lazy_static",
- "modulo",
  "regex",
  "serde_json",
 ]
@@ -36,12 +35,6 @@ name = "memchr"
 version = "2.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
-
-[[package]]
-name = "modulo"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53db447cac1df8402bef9a2ccacb0ea0dd1061b935e9e9ab9e5082c516aaada8"
 
 [[package]]
 name = "regex"

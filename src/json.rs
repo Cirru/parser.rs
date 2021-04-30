@@ -43,10 +43,10 @@ pub fn to_json_value(x: Cirru) -> Value {
 }
 
 /// generates JSON string from Cirru Data
-pub fn to_json_str(x: Cirru) -> String {
+pub fn to_json_str(x: Cirru) -> Result<String, String> {
   let v = to_json_value(x);
   match serde_json::to_string(&v) {
-    Ok(r) => r,
-    Err(e) => unreachable!(format!("error: {:?}", e)),
+    Ok(r) => Ok(r),
+    Err(e) => return Err(format!("error: {:?}", e)),
   }
 }

@@ -1,19 +1,21 @@
 use std::fs;
 use std::io;
 
-use cirru_parser::{format, from_json_str, CirruWriterOptions};
+use cirru_parser::{escape_cirru_leaf, format, from_json_str, CirruWriterOptions};
 
 #[test]
-fn write_demo() {
+fn write_demo() -> Result<(), String> {
   let writer_options = CirruWriterOptions { use_inline: false };
 
   match from_json_str(r#"[["a"], ["b"]]"#) {
-    Ok(tree) => assert_eq!("\na\n\nb\n", format(&tree, writer_options)),
+    Ok(tree) => assert_eq!("\na\n\nb\n", format(&tree, writer_options)?),
     Err(e) => {
       println!("file err: {}", e);
       panic!("failed to load edn data from JSON");
     }
   };
+
+  Ok(())
 }
 
 #[test]
@@ -48,7 +50,7 @@ fn write_files() -> Result<(), io::Error> {
     let writer_options = CirruWriterOptions { use_inline: false };
     match from_json_str(&json_str) {
       Ok(tree) => {
-        assert_eq!(cirru_str, format(&tree, writer_options));
+        assert_eq!(cirru_str, format(&tree, writer_options).unwrap());
       }
       Err(e) => {
         println!("{:?}", e);
@@ -70,7 +72,7 @@ fn write_with_inline() -> Result<(), io::Error> {
     let writer_options = CirruWriterOptions { use_inline: true };
     match from_json_str(&json_str) {
       Ok(tree) => {
-        assert_eq!(cirru_str, format(&tree, writer_options));
+        assert_eq!(cirru_str, format(&tree, writer_options).unwrap());
       }
       Err(e) => {
         println!("file err: {:?}", e);
@@ -79,4 +81,12 @@ fn write_with_inline() -> Result<(), io::Error> {
     }
   }
   Ok(())
+}
+
+#[test]
+fn leaves_escapeing() {
+  assert_eq!("\"a\"", escape_cirru_leaf("a"));
+  assert_eq!("\"a b\"", escape_cirru_leaf("a b"));
+  assert_eq!("\"a!+-b\"", escape_cirru_leaf("a!+-b"));
+  assert_eq!("\"a\\nb\"", escape_cirru_leaf("a\nb"))
 }
