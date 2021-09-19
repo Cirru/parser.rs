@@ -74,7 +74,7 @@ fn generate_leaf(s: &str) -> String {
     s.to_string()
   } else {
     let mut ret = String::from("\"");
-    ret.push_str(&str::escape_default(&s).to_string());
+    ret.push_str(&str::escape_default(s).to_string());
     ret.push('"');
     ret
   }
@@ -168,7 +168,7 @@ fn generate_tree(
             String::from("$")
           } else {
             let mut ret = String::from("$ ");
-            ret.push_str(&generate_tree(&ys, false, options, level, at_tail)?);
+            ret.push_str(&generate_tree(ys, false, options, level, at_tail)?);
             ret
           }
         } else if idx == 0 && insist_head {
@@ -184,8 +184,8 @@ fn generate_tree(
             ret
           } else {
             let mut ret = render_newline(next_level);
-            ret.push_str(&&generate_tree(
-              &ys,
+            ret.push_str(&generate_tree(
+              ys,
               child_insist_head,
               options,
               next_level,
@@ -194,7 +194,7 @@ fn generate_tree(
             ret
           }
         } else if kind == WriterNode::Expr {
-          let content = generate_tree(&ys, child_insist_head, options, next_level, false)?;
+          let content = generate_tree(ys, child_insist_head, options, next_level, false)?;
           if content.starts_with('\n') {
             content
           } else {
@@ -203,7 +203,7 @@ fn generate_tree(
             ret
           }
         } else if kind == WriterNode::BoxedExpr {
-          let content = generate_tree(&ys, child_insist_head, options, next_level, false)?;
+          let content = generate_tree(ys, child_insist_head, options, next_level, false)?;
           if prev_kind == WriterNode::Nil
             || prev_kind == WriterNode::Leaf
             || prev_kind == WriterNode::SimpleExpr

@@ -2,7 +2,7 @@
 
 ### Usages
 
-Found on [crate](https://crates.io/crates/cirru_parser).
+Found on [crate](https://crates.io/crates/cirru_parser) ![](https://img.shields.io/crates/v/cirru_parser?style=flat-square) .
 
 [Rust Docs](https://docs.rs/crate/cirru_parser/).
 

@@ -4,17 +4,6 @@ pub use types::*;
 
 pub use types::Cirru;
 
-// mutable to acc
-pub fn push_to_list<T: Clone>(acc: Vec<T>, xss: Vec<Vec<T>>) -> Vec<T> {
-  let mut result = acc;
-  for xs in xss {
-    for x in xs {
-      result.push(x)
-    }
-  }
-  result
-}
-
 pub fn resolve_comma(xs: &[Cirru]) -> Vec<Cirru> {
   if xs.is_empty() {
     return vec![];
@@ -40,13 +29,13 @@ fn comma_helper(intial_after: &[Cirru]) -> Vec<Cirru> {
           let head = &xs[0];
           match head {
             Cirru::List(_) => {
-              before.push(Cirru::List(resolve_comma(&xs)));
+              before.push(Cirru::List(resolve_comma(xs)));
             }
             Cirru::Leaf(s) => {
               if s == "," {
                 before.extend(resolve_comma(&xs[1..]))
               } else {
-                before.push(Cirru::List(resolve_comma(&xs)));
+                before.push(Cirru::List(resolve_comma(xs)));
               }
             }
           }
@@ -55,7 +44,7 @@ fn comma_helper(intial_after: &[Cirru]) -> Vec<Cirru> {
         }
       }
       Cirru::Leaf(_) => {
-        before.push(cursor.clone());
+        before.push(cursor.to_owned());
       }
     }
     pointer += 1;
@@ -84,7 +73,7 @@ fn dollar_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
 
       match cursor {
         Cirru::List(xs) => {
-          before.push(Cirru::List(resolve_dollar(&xs)));
+          before.push(Cirru::List(resolve_dollar(xs)));
           pointer += 1;
         }
         Cirru::Leaf(s) => {

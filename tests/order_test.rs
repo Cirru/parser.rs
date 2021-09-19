@@ -14,13 +14,9 @@ fn nodes_order() {
     Cirru::List(vec![Cirru::Leaf(String::from("a"))])
   );
 
-  assert_eq!(
-    true,
-    Cirru::Leaf(String::from("a")) < Cirru::Leaf(String::from("b"))
-  );
+  assert!(Cirru::Leaf(String::from("a")) < Cirru::Leaf(String::from("b")));
 
-  assert_eq!(
-    true,
+  assert!(
     Cirru::List(vec![Cirru::Leaf(String::from("a"))])
       < Cirru::List(vec![
         Cirru::Leaf(String::from("a")),
@@ -28,8 +24,7 @@ fn nodes_order() {
       ])
   );
 
-  assert_eq!(
-    true,
+  assert!(
     Cirru::List(vec![Cirru::Leaf(String::from("b"))])
       > Cirru::List(vec![
         Cirru::Leaf(String::from("a")),
@@ -37,10 +32,7 @@ fn nodes_order() {
       ])
   );
 
-  assert_eq!(
-    false,
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))]) < Cirru::Leaf(String::from("b"))
-  );
+  assert!(Cirru::List(vec![Cirru::Leaf(String::from("a"))]) >= Cirru::Leaf(String::from("b")));
 }
 
 #[test]

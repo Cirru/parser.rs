@@ -4,27 +4,33 @@ use std::io;
 use serde_json::json;
 
 use cirru_parser::parse;
-use cirru_parser::{from_json_str, from_json_value};
+use cirru_parser::{from_json_str, from_json_value, Cirru};
 
 #[test]
 fn parse_demo() {
-  assert_eq!(parse("a"), from_json_str(r#"[["a"]]"#),);
-
-  assert_eq!(parse("a b c"), from_json_str(r#"[["a", "b", "c"]]"#));
-
-  assert_eq!(parse("a\nb"), from_json_str(r#"[["a"], ["b"]]"#));
+  assert_eq!(parse("a").map(Cirru::List), from_json_str(r#"[["a"]]"#));
 
   assert_eq!(
-    parse("a (b) c"),
+    parse("a b c").map(Cirru::List),
+    from_json_str(r#"[["a", "b", "c"]]"#)
+  );
+
+  assert_eq!(
+    parse("a\nb").map(Cirru::List),
+    from_json_str(r#"[["a"], ["b"]]"#)
+  );
+
+  assert_eq!(
+    parse("a (b) c").map(Cirru::List),
     Ok(from_json_value(json!([["a", ["b"], "c"]])))
   );
 
   assert_eq!(
-    parse("a (b)\n  c"),
+    parse("a (b)\n  c").map(Cirru::List),
     Ok(from_json_value(json!([["a", ["b"], ["c"]]])))
   );
 
-  assert_eq!(parse(""), from_json_str(r#"[]"#));
+  assert_eq!(parse("").map(Cirru::List), from_json_str(r#"[]"#));
 }
 
 #[test]
@@ -49,7 +55,7 @@ fn parse_files() -> Result<(), io::Error> {
     println!("testing file: {}", file);
     let json_str = fs::read_to_string(format!("./tests/data/{}.json", file))?;
     let cirru_str = fs::read_to_string(format!("./tests/cirru/{}.cirru", file))?;
-    assert_eq!(parse(&cirru_str), from_json_str(&json_str));
+    assert_eq!(parse(&cirru_str).map(Cirru::List), from_json_str(&json_str));
   }
   Ok(())
 }

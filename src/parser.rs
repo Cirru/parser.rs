@@ -32,9 +32,8 @@ mod writer;
 
 mod json;
 
-use tree::{push_to_list, resolve_comma, resolve_dollar};
-use types::CirruLexItem::*;
-use types::CirruLexState::*;
+use tree::{resolve_comma, resolve_dollar};
+use types::CirruLexState;
 
 pub use json::*;
 pub use types::{escape_cirru_leaf, Cirru, CirruLexItem, CirruLexItemList};
@@ -47,23 +46,29 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
     if idx >= tokens.len() {
       return None;
     }
-    let c = tokens[idx].clone();
+    let c = tokens[idx].to_owned();
     idx += 1;
     Some(c)
   };
   loop {
     let chunk = pull_token(); // TODO Option
 
-    match chunk {
-      Some(LexItemOpen) => {
+    if chunk == None {
+      return Ok(acc);
+    }
+    match chunk.unwrap() {
+      CirruLexItem::Open => {
         let mut pointer: Vec<Cirru> = vec![];
         let mut pointer_stack: Vec<Vec<Cirru>> = vec![];
         loop {
           let cursor = pull_token(); // TODO Option
-          match cursor {
-            Some(LexItemClose) => {
+          if cursor == None {
+            return Err(String::from("unexpected end of file"));
+          }
+          match cursor.unwrap() {
+            CirruLexItem::Close => {
               if pointer_stack.is_empty() {
-                acc.push(Cirru::List(pointer.clone()));
+                acc.push(Cirru::List(pointer.to_owned()));
                 break;
               } else {
                 let v = pointer_stack.pop();
@@ -77,19 +82,17 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
                 }
               }
             }
-            Some(LexItemOpen) => {
+            CirruLexItem::Open => {
               pointer_stack.push(pointer);
               pointer = vec![];
             }
-            Some(LexItemString(s)) => pointer.push(Cirru::Leaf(s)),
-            Some(LexItemIndent(n)) => return Err(format!("unknown indent: {}", n)),
-            None => return Err(String::from("unexpected end of file")),
+            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s)),
+            CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
           }
         }
       }
-      Some(LexItemClose) => return Err(String::from("unexpected \")\"")),
-      Some(a) => return Err(format!("unknown item: {:?}", a)),
-      None => return Ok(acc),
+      CirruLexItem::Close => return Err(String::from("unexpected \")\"")),
+      a => return Err(format!("unknown item: {:?}", a)),
     }
   }
 }
@@ -97,7 +100,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
 fn parse_indentation(buffer: String) -> Result<CirruLexItem, String> {
   let size = buffer.len();
   if size % 2 == 0 {
-    Ok(LexItemIndent(size / 2))
+    Ok(CirruLexItem::Indent(size / 2))
   } else {
     Err(format!("odd indentation size, {}", buffer.escape_default()))
   }
@@ -106,136 +109,136 @@ fn parse_indentation(buffer: String) -> Result<CirruLexItem, String> {
 /// internal function for lexing
 pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   let mut acc: CirruLexItemList = vec![];
-  let mut state = LexStateIndent;
+  let mut state = CirruLexState::Indent;
   let mut buffer = String::from("");
   let code = initial_code;
 
   for c in code.chars() {
     match state {
-      LexStateSpace => match c {
+      CirruLexState::Space => match c {
         ' ' => {
-          state = LexStateSpace;
+          state = CirruLexState::Space;
           buffer = String::from("");
         }
         '\n' => {
-          state = LexStateIndent;
+          state = CirruLexState::Indent;
           buffer = String::from("");
         }
         '(' => {
-          acc.push(LexItemOpen);
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Open);
+          state = CirruLexState::Space;
           buffer = String::from("")
         }
         ')' => {
-          acc.push(LexItemClose);
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Close);
+          state = CirruLexState::Space;
           buffer = String::from("")
         }
         '"' => {
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer = String::from("");
         }
         _ => {
-          state = LexStateToken;
+          state = CirruLexState::Token;
           buffer = String::from(c)
         }
       },
-      LexStateToken => match c {
+      CirruLexState::Token => match c {
         ' ' => {
-          acc.push(LexItemString(buffer));
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Str(buffer));
+          state = CirruLexState::Space;
           buffer = String::from("");
         }
         '"' => {
-          acc.push(LexItemString(buffer));
-          state = LexStateString;
+          acc.push(CirruLexItem::Str(buffer));
+          state = CirruLexState::Str;
           buffer = String::from("");
         }
         '\n' => {
-          acc.push(LexItemString(buffer));
-          state = LexStateIndent;
+          acc.push(CirruLexItem::Str(buffer));
+          state = CirruLexState::Indent;
           buffer = String::from("");
         }
         '(' => {
-          acc.push(LexItemString(buffer));
-          acc.push(LexItemOpen);
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Open);
+          state = CirruLexState::Space;
           buffer = String::from("")
         }
         ')' => {
-          acc.push(LexItemString(buffer));
-          acc.push(LexItemClose);
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Close);
+          state = CirruLexState::Space;
           buffer = String::from("")
         }
         _ => {
-          state = LexStateToken;
+          state = CirruLexState::Token;
           buffer.push(c);
         }
       },
-      LexStateString => match c {
+      CirruLexState::Str => match c {
         '"' => {
-          acc.push(LexItemString(buffer));
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Str(buffer));
+          state = CirruLexState::Space;
           buffer = String::from("");
         }
         '\\' => {
-          state = LexStateEscape;
+          state = CirruLexState::Escape;
         }
         '\n' => {
           return Err(String::from("unexpected newline in string"));
         }
         _ => {
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer.push(c);
         }
       },
-      LexStateEscape => match c {
+      CirruLexState::Escape => match c {
         '"' => {
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer.push('"');
         }
         't' => {
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer.push('\t');
         }
         'n' => {
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer.push('\n');
         }
         '\\' => {
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer.push('\\');
         }
         _ => return Err(String::from("unexpected character during string escaping")),
       },
-      LexStateIndent => match c {
+      CirruLexState::Indent => match c {
         ' ' => {
-          state = LexStateIndent;
+          state = CirruLexState::Indent;
           buffer.push(c);
         }
         '\n' => {
-          state = LexStateIndent;
+          state = CirruLexState::Indent;
           buffer = String::from("");
         }
         '"' => {
           let level = parse_indentation(buffer)?;
           acc.push(level);
-          state = LexStateString;
+          state = CirruLexState::Str;
           buffer = String::from("");
         }
         '(' => {
           let level = parse_indentation(buffer)?;
           acc.push(level);
-          acc.push(LexItemOpen);
-          state = LexStateSpace;
+          acc.push(CirruLexItem::Open);
+          state = CirruLexState::Space;
           buffer = String::from("");
         }
         ')' => return Err(String::from("unexpected ) at line start")),
         _ => {
           let level = parse_indentation(buffer)?;
           acc.push(level);
-          state = LexStateToken;
+          state = CirruLexState::Token;
           buffer = String::from(c);
         }
       },
@@ -243,23 +246,15 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   }
 
   match state {
-    LexStateSpace => Ok(acc),
-    LexStateToken => {
-      acc.push(LexItemString(buffer));
+    CirruLexState::Space => Ok(acc),
+    CirruLexState::Token => {
+      acc.push(CirruLexItem::Str(buffer));
       Ok(acc)
     }
-    LexStateEscape => Err(String::from("unknown escape")),
-    LexStateIndent => Ok(acc),
-    LexStateString => Err(String::from("finished at string")),
+    CirruLexState::Escape => Err(String::from("unknown escape")),
+    CirruLexState::Indent => Ok(acc),
+    CirruLexState::Str => Err(String::from("finished at string")),
   }
-}
-
-fn repeat<T: Clone>(times: usize, x: T) -> Vec<T> {
-  let mut acc: Vec<T> = vec![];
-  for _ in 0..times {
-    acc.push(x.clone());
-  }
-  acc
 }
 
 /// internal function for figuring out indentations after lexing
@@ -273,38 +268,44 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
       if acc.is_empty() {
         return vec![];
       } else {
-        acc.insert(0, LexItemOpen);
-        acc = push_to_list(acc, vec![repeat(level, LexItemClose), vec![LexItemClose]]);
+        acc.insert(0, CirruLexItem::Open);
+        for _ in 0..level {
+          acc.push(CirruLexItem::Close);
+        }
+        acc.push(CirruLexItem::Close);
         return acc;
       }
     } else {
-      let cursor = tokens[pointer].clone();
+      let cursor = tokens[pointer].to_owned();
       match cursor {
-        LexItemString(s) => {
-          acc.push(LexItemString(s));
+        CirruLexItem::Str(s) => {
+          acc.push(CirruLexItem::Str(s));
           pointer += 1;
         }
-        LexItemOpen => {
-          acc.push(LexItemOpen);
+        CirruLexItem::Open => {
+          acc.push(CirruLexItem::Open);
           pointer += 1;
         }
-        LexItemClose => {
-          acc.push(LexItemClose);
+        CirruLexItem::Close => {
+          acc.push(CirruLexItem::Close);
           pointer += 1;
         }
-        LexItemIndent(n) => match n {
+        CirruLexItem::Indent(n) => match n {
           _ if n > level => {
             let delta = n - level;
-            acc = push_to_list(acc, vec![repeat(delta, LexItemOpen)]);
+            for _ in 0..delta {
+              acc.push(CirruLexItem::Open);
+            }
             pointer += 1;
             level = n;
           }
           _ if n < level => {
             let delta = level - n;
-            acc = push_to_list(
-              acc,
-              vec![repeat(delta, LexItemClose), vec![LexItemClose, LexItemOpen]],
-            );
+            for _ in 0..delta {
+              acc.push(CirruLexItem::Close);
+            }
+            acc.push(CirruLexItem::Close);
+            acc.push(CirruLexItem::Open);
             pointer += 1;
             level = n;
           }
@@ -312,8 +313,8 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             if acc.is_empty() {
               acc = vec![];
             } else {
-              acc.push(LexItemClose);
-              acc.push(LexItemOpen);
+              acc.push(CirruLexItem::Close);
+              acc.push(CirruLexItem::Open);
             }
             pointer += 1;
           }
@@ -328,11 +329,10 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
 /// ```rust
 /// cirru_parser::parse("def a 1");
 /// ```
-pub fn parse(code: &str) -> Result<Cirru, String> {
+pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   let tokens = resolve_indentations(lex(code)?);
   // println!("{:?}", tokens);
   let tree = build_exprs(tokens)?;
   // println!("tree {:?}", tree);
-  let v = Cirru::List(resolve_comma(&resolve_dollar(&tree)));
-  Ok(v)
+  Ok(resolve_comma(&resolve_dollar(&tree)))
 }
