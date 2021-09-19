@@ -1,7 +1,6 @@
 // #[macro_use]
 // extern crate lazy_static;
 
-use cirru_parser::Cirru;
 use cirru_parser::*;
 // use std::collections::hash_map::DefaultHasher;
 use std::fs;
@@ -27,7 +26,7 @@ defn fib (n)
   match parse(&content) {
     Ok(v) => {
       let writer_options = CirruWriterOptions { use_inline: false };
-      println!("{}", format(&Cirru::List(v), writer_options).unwrap());
+      println!("{}", format(&v, writer_options).unwrap());
     }
     Err(e) => println!("{:?}", e),
   }

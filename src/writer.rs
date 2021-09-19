@@ -288,9 +288,6 @@ fn generate_statements(ys: &[Cirru], options: CirruWriterOptions) -> Result<Stri
 }
 
 /// format Cirru code, use options to control `use_inline` option
-pub fn format(xs: &Cirru, options: CirruWriterOptions) -> Result<String, String> {
-  match xs {
-    Cirru::Leaf(_) => Err(String::from("expected vector of exprs")),
-    Cirru::List(ys) => generate_statements(ys, options),
-  }
+pub fn format(xs: &[Cirru], options: CirruWriterOptions) -> Result<String, String> {
+  generate_statements(xs, options)
 }
