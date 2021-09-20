@@ -1,11 +1,10 @@
-#[macro_use]
-extern crate lazy_static;
+// #[macro_use]
+// extern crate lazy_static;
 
-use cirru_parser::Cirru;
 use cirru_parser::*;
-use std::collections::hash_map::DefaultHasher;
+// use std::collections::hash_map::DefaultHasher;
 use std::fs;
-use std::hash::{Hash, Hasher};
+// use std::hash::{Hash, Hasher};
 
 // TODO currenly main only used to debugging, logs in tests are suppressed
 fn main() {
@@ -21,7 +20,7 @@ defn fib (n)
   "#,
   );
 
-  let large_demo = "/Users/chen/repo/calcit-lang/runner.rs/src/cirru/calcit-core.cirru";
+  let large_demo = "/Users/chen/repo/calcit-lang/editor/compact.cirru";
   let content = fs::read_to_string(large_demo).unwrap();
 
   match parse(&content) {

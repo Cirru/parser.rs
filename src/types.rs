@@ -16,20 +16,20 @@ pub enum Cirru {
 
 #[derive(fmt::Debug, PartialEq)]
 pub enum CirruLexState {
-  LexStateSpace,
-  LexStateToken,
-  LexStateEscape,
-  LexStateIndent,
-  LexStateString,
+  Space,
+  Token,
+  Escape,
+  Indent,
+  Str,
 }
 
 /// internal control item during lexing
 #[derive(fmt::Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 pub enum CirruLexItem {
-  LexItemOpen,
-  LexItemClose,
-  LexItemIndent(usize),
-  LexItemString(String),
+  Open,
+  Close,
+  Indent(usize),
+  Str(String),
 }
 
 pub type CirruLexItemList = Vec<CirruLexItem>;

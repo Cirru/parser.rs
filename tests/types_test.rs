@@ -25,7 +25,7 @@ fn test_fmt() {
   let a = Cirru::Leaf(String::from("na"));
   assert_eq!(format!("{}", a), "na");
 
-  let b = a.clone();
+  let b = a.to_owned();
   let c = Cirru::List(vec![a, b]);
   assert_eq!(format!("{}", c), "(na na)")
 }
