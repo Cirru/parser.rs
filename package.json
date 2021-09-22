@@ -1,0 +1,12 @@
+{
+  "name": "parser.rs",
+  "version": "0.0.1",
+  "description": "Parser demo",
+  "main": "index.js",
+  "repository": "git@github.com:Cirru/parser.rs.git",
+  "author": "jiyinyiyong <jiyinyiyong@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^2.5.10"
+  }
+}

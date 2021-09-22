@@ -17,3 +17,6 @@ jobs:
           toolchain: stable
 
       - run: cargo test
+
+      - run: cargo install wasm-pack
+      - run: wasm-pack build -t web

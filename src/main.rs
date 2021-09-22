@@ -1,7 +1,7 @@
 // #[macro_use]
 // extern crate lazy_static;
 
-use cirru_parser::*;
+use cirru_parser::{format, parse, CirruWriterOptions};
 // use std::collections::hash_map::DefaultHasher;
 use std::fs;
 // use std::hash::{Hash, Hasher};
