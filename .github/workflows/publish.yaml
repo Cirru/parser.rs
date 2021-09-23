@@ -19,3 +19,6 @@ jobs:
       - uses: katyo/publish-crates@v1
         with:
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - run: cargo install wasm-pack
+      - run: wasm-pack build -t web

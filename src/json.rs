@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::types::Cirru;
+use crate::primes::Cirru;
 
 /// parse JSON `["a", ["b"]]` into Cirru,
 /// only Arrays and Strings are accepted

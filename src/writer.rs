@@ -1,4 +1,4 @@
-use crate::types::Cirru;
+use crate::primes::Cirru;
 use std::fmt;
 use std::str;
 

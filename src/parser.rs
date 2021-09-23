@@ -23,21 +23,26 @@ parses to:
 find more on <http://text.cirru.org/> .
 */
 
+extern crate wasm_bindgen;
+use wasm_bindgen::prelude::*;
+
 #[macro_use]
 extern crate lazy_static;
 
+mod primes;
+mod s_expr;
 mod tree;
-mod types;
 mod writer;
 
 mod json;
 
+use primes::CirruLexState;
 use tree::{resolve_comma, resolve_dollar};
-use types::CirruLexState;
 
-pub use json::*;
-pub use types::{escape_cirru_leaf, Cirru, CirruLexItem, CirruLexItemList};
-pub use writer::*;
+pub use json::{from_json_str, from_json_value, to_json_str, to_json_value};
+pub use primes::{escape_cirru_leaf, Cirru, CirruLexItem, CirruLexItemList};
+pub use s_expr::format_to_lisp;
+pub use writer::{format, CirruWriterOptions};
 
 fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
   let mut acc: Vec<Cirru> = vec![];
@@ -335,4 +340,15 @@ pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   let tree = build_exprs(tokens)?;
   // println!("tree {:?}", tree);
   Ok(resolve_comma(&resolve_dollar(&tree)))
+}
+
+#[wasm_bindgen]
+pub fn cirru_to_lisp(code: String) -> String {
+  match parse(&code) {
+    Ok(tree) => match format_to_lisp(tree) {
+      Ok(s) => s,
+      Err(_) => panic!("failed to convert to lisp"),
+    },
+    Err(_) => panic!("expected a leaf"),
+  }
 }

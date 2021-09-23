@@ -5,6 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::str;
 // use std::marker::Copy;
 
+use crate::s_expr;
 use regex::Regex;
 
 /// Cirru uses nested Vecters and Strings as data structure
@@ -140,6 +141,13 @@ impl Cirru {
     match self {
       Self::Leaf(s) => s.len() == 0,
       Self::List(xs) => xs.len() == 0,
+    }
+  }
+
+  pub fn to_lisp(&self) -> Result<String, String> {
+    match self {
+      Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {}", self)),
+      Cirru::List(xs) => s_expr::format_to_lisp(xs.to_owned()),
     }
   }
 }

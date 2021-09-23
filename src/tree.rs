@@ -1,8 +1,6 @@
-use crate::types;
+use crate::primes;
 
-pub use types::*;
-
-pub use types::Cirru;
+pub use primes::Cirru;
 
 pub fn resolve_comma(xs: &[Cirru]) -> Vec<Cirru> {
   if xs.is_empty() {
