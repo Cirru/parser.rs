@@ -31,12 +31,9 @@ mod s_expr;
 mod tree;
 mod writer;
 
-mod json;
-
 use primes::CirruLexState;
 use tree::{resolve_comma, resolve_dollar};
 
-pub use json::{from_json_str, from_json_value, to_json_str, to_json_value};
 pub use primes::{escape_cirru_leaf, Cirru, CirruLexItem, CirruLexItemList};
 pub use s_expr::format_to_lisp;
 pub use writer::{format, CirruWriterOptions};
