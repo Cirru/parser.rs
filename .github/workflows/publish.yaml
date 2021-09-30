@@ -16,8 +16,11 @@ jobs:
 
       - run: cargo test
 
-      - run: cargo install wasm-pack
-      - run: wasm-pack build -t web
+      - uses: jetli/wasm-pack-action@v0.3.0
+        with:
+          version: "latest"
+
+      - run: (cd wasm-example/ && wasm-pack build -t web)
 
       - uses: katyo/publish-crates@v1
         with:

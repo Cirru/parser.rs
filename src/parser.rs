@@ -23,9 +23,6 @@ parses to:
 find more on <http://text.cirru.org/> .
 */
 
-extern crate wasm_bindgen;
-use wasm_bindgen::prelude::*;
-
 #[macro_use]
 extern crate lazy_static;
 
@@ -34,12 +31,9 @@ mod s_expr;
 mod tree;
 mod writer;
 
-mod json;
-
 use primes::CirruLexState;
 use tree::{resolve_comma, resolve_dollar};
 
-pub use json::{from_json_str, from_json_value, to_json_str, to_json_value};
 pub use primes::{escape_cirru_leaf, Cirru, CirruLexItem, CirruLexItemList};
 pub use s_expr::format_to_lisp;
 pub use writer::{format, CirruWriterOptions};
@@ -342,7 +336,6 @@ pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   Ok(resolve_comma(&resolve_dollar(&tree)))
 }
 
-#[wasm_bindgen]
 pub fn cirru_to_lisp(code: String) -> String {
   match parse(&code) {
     Ok(tree) => match format_to_lisp(tree) {

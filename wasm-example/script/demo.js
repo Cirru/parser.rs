@@ -1,4 +1,4 @@
-import { cirru_to_lisp, default as init } from "../pkg/cirru_parser";
+import { cirru_to_lisp, default as init } from "../pkg/wasm_example";
 
 let main = async () => {
   let wasm = await init();

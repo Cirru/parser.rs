@@ -1,7 +1,11 @@
 use std::fs;
 use std::io;
 
-use cirru_parser::{escape_cirru_leaf, format, from_json_str, Cirru, CirruWriterOptions};
+mod json;
+
+use json::from_json_str;
+
+use cirru_parser::{escape_cirru_leaf, format, Cirru, CirruWriterOptions};
 
 #[test]
 fn write_demo() -> Result<(), String> {

@@ -3,8 +3,11 @@ use std::io;
 
 use serde_json::json;
 
-use cirru_parser::parse;
-use cirru_parser::{from_json_str, from_json_value, Cirru};
+mod json;
+
+use cirru_parser::{parse, Cirru};
+
+use json::{from_json_str, from_json_value};
 
 #[test]
 fn parse_demo() {
