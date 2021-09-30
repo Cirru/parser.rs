@@ -23,9 +23,6 @@ parses to:
 find more on <http://text.cirru.org/> .
 */
 
-extern crate wasm_bindgen;
-use wasm_bindgen::prelude::*;
-
 #[macro_use]
 extern crate lazy_static;
 
@@ -342,7 +339,6 @@ pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   Ok(resolve_comma(&resolve_dollar(&tree)))
 }
 
-#[wasm_bindgen]
 pub fn cirru_to_lisp(code: String) -> String {
   match parse(&code) {
     Ok(tree) => match format_to_lisp(tree) {

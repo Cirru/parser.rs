@@ -1,7 +1,8 @@
 /target
+wasm-example/target/
 
-node_modules/
+wasm-example/node_modules/
 
-pkg/
+wasm-example/pkg/
 
-dist/
+wasm-example/dist/

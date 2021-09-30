@@ -17,7 +17,7 @@ jobs:
       - run: cargo test
 
       - run: cargo install wasm-pack
-      - run: wasm-pack build -t web
+      - run: (cd wasm-example/ && wasm-pack build -t web)
 
       - uses: katyo/publish-crates@v1
         with:

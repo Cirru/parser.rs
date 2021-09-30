@@ -22,10 +22,10 @@ jobs:
         with:
           version: "latest"
 
-      - run: wasm-pack build -t web
+      - run: (cd wasm-example/ && wasm-pack build -t web)
 
       - name: "compiles to js"
-        run: yarn && yarn vite build --base=./
+        run: (cd wasm-example/ && yarn && yarn vite build --base=./)
 
       - name: Deploy to server
         id: deploy
@@ -36,7 +36,7 @@ jobs:
           flags: "-avzr --progress"
           options: ""
           ssh_options: ""
-          src: "dist/*"
+          src: "wasm-example/dist/*"
           dest: "rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}"
 
       - name: Display status from deploy
