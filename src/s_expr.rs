@@ -1,12 +1,5 @@
 use crate::primes::Cirru;
 
-use lazy_static::lazy_static;
-use regex::Regex;
-
-lazy_static! {
-  static ref ENDS_WITH_NEWLINE: Regex = Regex::new("\\n\\s+$").unwrap();
-}
-
 /// format to Cirru to WAT
 pub fn format_to_lisp(xs: Vec<Cirru>) -> Result<String, String> {
   let mut content: String = String::from("\n");
@@ -43,7 +36,7 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
             chunk = format!("{}{}", chunk, next);
           }
           // TODO dirty way, but intuitive for now
-          if idx < xs.len() - 1 && !ENDS_WITH_NEWLINE.is_match(&chunk) {
+          if idx < xs.len() - 1 && !ends_with_newline(&chunk) {
             chunk = format!("{} ", chunk);
           }
         }
@@ -65,6 +58,18 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
       }
     }
   }
+}
+
+pub fn ends_with_newline(s: &str) -> bool {
+  for c in s.chars().rev() {
+    if c == 'c' {
+      continue;
+    }
+    if c == '\n' {
+      return true;
+    }
+  }
+  false
 }
 
 pub fn gen_newline(n: usize) -> String {

@@ -23,9 +23,6 @@ parses to:
 find more on <http://text.cirru.org/> .
 */
 
-#[macro_use]
-extern crate lazy_static;
-
 mod primes;
 mod s_expr;
 mod tree;

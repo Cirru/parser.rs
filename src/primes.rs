@@ -6,7 +6,6 @@ use std::str;
 // use std::marker::Copy;
 
 use crate::s_expr;
-use regex::Regex;
 
 /// Cirru uses nested Vecters and Strings as data structure
 #[derive(Clone)]
@@ -35,15 +34,11 @@ pub enum CirruLexItem {
 
 pub type CirruLexItemList = Vec<CirruLexItem>;
 
-lazy_static! {
-  static ref RE_SIMPLE_TOKEN: Regex = Regex::new(r"^[\w\d\-\?!\+\*\$@!#%&_=|:\.<>]+$").unwrap();
-}
-
 impl fmt::Display for Cirru {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       Cirru::Leaf(a) => {
-        if RE_SIMPLE_TOKEN.is_match(a) {
+        if is_normal_str(a) {
           write!(f, "{}", a)
         } else {
           write!(f, "{}", escape_cirru_leaf(a))
@@ -63,6 +58,17 @@ impl fmt::Display for Cirru {
   }
 }
 
+fn is_normal_str(tok: &str) -> bool {
+  for s in tok.chars() {
+    if !matches!(s, 'A'..='Z' | 'a'..='z'|'0'..='9' | '-' | '?' |'!'|'+'|'*'|'$'|'@'|'#'|'%'|'&'|'_'|'='|'|'|':'|'.'|'<'|'>')
+    {
+      return false;
+    }
+  }
+
+  true
+}
+
 /// common API for turning Cirru leaf with strings escaped
 /// ```rust
 /// use cirru_parser::escape_cirru_leaf;
@@ -71,7 +77,7 @@ impl fmt::Display for Cirru {
 /// ```
 pub fn escape_cirru_leaf(s: &str) -> String {
   let mut chunk = String::from("\"");
-  if RE_SIMPLE_TOKEN.is_match(s) {
+  if is_normal_str(s) {
     chunk.push_str(s);
   } else {
     chunk.push_str(&s.escape_default().to_string());
