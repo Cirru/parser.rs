@@ -76,7 +76,8 @@ fn is_normal_str(tok: &str) -> bool {
 /// escape_cirru_leaf("a b"); // "\"a b\""
 /// ```
 pub fn escape_cirru_leaf(s: &str) -> String {
-  let mut chunk = String::from("\"");
+  let mut chunk = String::with_capacity(s.len() + 1);
+  chunk.push('\"');
   if is_normal_str(s) {
     chunk.push_str(s);
   } else {

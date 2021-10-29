@@ -73,7 +73,8 @@ fn generate_leaf(s: &str) -> String {
   if all_allowed {
     s.to_string()
   } else {
-    let mut ret = String::from("\"");
+    let mut ret = String::with_capacity(s.len() + 2);
+    ret.push('"');
     ret.push_str(&str::escape_default(s).to_string());
     ret.push('"');
     ret
@@ -103,7 +104,7 @@ fn generate_inline_expr(xs: &[Cirru]) -> String {
 }
 
 fn render_spaces(n: usize) -> String {
-  let mut result = String::from("");
+  let mut result = String::with_capacity(n * 2);
   for _ in 0..n {
     result.push_str("  ");
   }
@@ -111,7 +112,8 @@ fn render_spaces(n: usize) -> String {
 }
 
 fn render_newline(n: usize) -> String {
-  let mut ret = String::from("\n");
+  let mut ret = String::with_capacity(n * 2);
+  ret.push('\n');
   ret.push_str(&render_spaces(n));
   ret
 }

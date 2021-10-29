@@ -10,9 +10,9 @@ pub fn resolve_comma(xs: &[Cirru]) -> Vec<Cirru> {
   }
 }
 
-fn comma_helper(intial_after: &[Cirru]) -> Vec<Cirru> {
-  let mut before: Vec<Cirru> = vec![];
-  let after: &[Cirru] = intial_after;
+fn comma_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
+  let mut before: Vec<Cirru> = Vec::with_capacity(initial_after.len());
+  let after: &[Cirru] = initial_after;
 
   let mut pointer = 0;
 
@@ -51,7 +51,7 @@ fn comma_helper(intial_after: &[Cirru]) -> Vec<Cirru> {
 
 pub fn resolve_dollar(xs: &[Cirru]) -> Vec<Cirru> {
   if xs.is_empty() {
-    return vec![];
+    vec![]
   } else {
     dollar_helper(xs)
   }

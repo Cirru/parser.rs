@@ -73,9 +73,10 @@ pub fn ends_with_newline(s: &str) -> bool {
 }
 
 pub fn gen_newline(n: usize) -> String {
-  let mut chunk: String = String::from("\n");
+  let mut chunk: String = String::with_capacity(2 * n + 2);
+  chunk.push('\n');
   for _ in 0..n {
-    chunk = format!("{}  ", chunk);
+    chunk.push_str("  ");
   }
   chunk
 }
