@@ -4,56 +4,45 @@ use std::hash::{Hash, Hasher};
 
 #[test]
 fn nodes_order() {
-  assert_eq!(
-    Cirru::Leaf(String::from("a")),
-    Cirru::Leaf(String::from("a"))
-  );
+  assert_eq!(Cirru::leaf("a"), Cirru::leaf("a"));
 
   assert_eq!(
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))]),
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))])
+    Cirru::List(vec![Cirru::leaf("a")]),
+    Cirru::List(vec![Cirru::leaf("a")])
   );
 
-  assert!(Cirru::Leaf(String::from("a")) < Cirru::Leaf(String::from("b")));
+  assert!(Cirru::leaf("a") < Cirru::leaf("b"));
 
   assert!(
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))])
-      < Cirru::List(vec![
-        Cirru::Leaf(String::from("a")),
-        Cirru::Leaf(String::from("a"))
-      ])
+    Cirru::List(vec![Cirru::leaf("a")]) < Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("a")])
   );
 
   assert!(
-    Cirru::List(vec![Cirru::Leaf(String::from("b"))])
-      > Cirru::List(vec![
-        Cirru::Leaf(String::from("a")),
-        Cirru::Leaf(String::from("a"))
-      ])
+    Cirru::List(vec![Cirru::leaf("b")]) > Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("a")])
   );
 
-  assert!(Cirru::List(vec![Cirru::Leaf(String::from("a"))]) >= Cirru::Leaf(String::from("b")));
+  assert!(Cirru::List(vec![Cirru::leaf("a")]) >= Cirru::leaf("b"));
 }
 
 #[test]
 fn try_hash() {
   let mut hasher = DefaultHasher::new();
-  Cirru::Leaf(String::from("a")).hash(&mut hasher);
+  Cirru::leaf("a").hash(&mut hasher);
   let a = hasher.finish();
   println!("{:x}", a);
 
   let mut hasher = DefaultHasher::new();
-  Cirru::Leaf(String::from("a")).hash(&mut hasher);
+  Cirru::leaf("a").hash(&mut hasher);
   let b = hasher.finish();
   println!("{:x}", b);
 
   let mut hasher = DefaultHasher::new();
-  Cirru::List(vec![Cirru::Leaf(String::from("a"))]).hash(&mut hasher);
+  Cirru::List(vec![Cirru::leaf("a")]).hash(&mut hasher);
   let c = hasher.finish();
   println!("{:x}", c);
 
   let mut hasher = DefaultHasher::new();
-  Cirru::List(vec![Cirru::Leaf(String::from("a"))]).hash(&mut hasher);
+  Cirru::List(vec![Cirru::leaf("a")]).hash(&mut hasher);
   let d = hasher.finish();
   println!("{:x}", d);
 

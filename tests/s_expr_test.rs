@@ -3,22 +3,15 @@ use cirru_parser::{parse, Cirru};
 #[test]
 fn format_tests() -> Result<(), String> {
   assert_eq!(
-    Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("b")),
-    ])])
-    .to_lisp()?,
+    Cirru::List(vec![Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("b"),])]).to_lisp()?,
     String::from("\n(a b)\n")
   );
 
   assert_eq!(
     Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("b")),
-      Cirru::List(vec![
-        Cirru::Leaf(String::from("c")),
-        Cirru::Leaf(String::from("d")),
-      ])
+      Cirru::leaf("a"),
+      Cirru::leaf("b"),
+      Cirru::List(vec![Cirru::leaf("c"), Cirru::leaf("d"),])
     ])])
     .to_lisp()?,
     String::from("\n(a b (c d))\n")
@@ -26,15 +19,12 @@ fn format_tests() -> Result<(), String> {
 
   assert_eq!(
     Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("b")),
+      Cirru::leaf("a"),
+      Cirru::leaf("b"),
       Cirru::List(vec![
-        Cirru::Leaf(String::from("c")),
-        Cirru::Leaf(String::from("d")),
-        Cirru::List(vec![
-          Cirru::Leaf(String::from("e")),
-          Cirru::Leaf(String::from("f")),
-        ])
+        Cirru::leaf("c"),
+        Cirru::leaf("d"),
+        Cirru::List(vec![Cirru::leaf("e"), Cirru::leaf("f"),])
       ])
     ])])
     .to_lisp()?,
@@ -42,18 +32,17 @@ fn format_tests() -> Result<(), String> {
   );
 
   assert_eq!(
-    Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("|b")),
-    ])])
+    Cirru::List(vec![Cirru::List(
+      vec![Cirru::leaf("a"), Cirru::leaf("|b"),]
+    )])
     .to_lisp()?,
     String::from("\n(a \"b\")\n")
   );
 
   assert_eq!(
     Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("|b c")),
+      Cirru::leaf("a"),
+      Cirru::leaf("|b c"),
     ])])
     .to_lisp()?,
     String::from("\n(a \"b c\")\n")
@@ -77,12 +66,9 @@ const COMMENT_2: &str = r#"
 fn comment_tests() -> Result<(), String> {
   assert_eq!(
     Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("b")),
-      Cirru::List(vec![
-        Cirru::Leaf(String::from(";")),
-        Cirru::Leaf(String::from("d")),
-      ])
+      Cirru::leaf("a"),
+      Cirru::leaf("b"),
+      Cirru::List(vec![Cirru::leaf(";"), Cirru::leaf("d"),])
     ])])
     .to_lisp()?,
     String::from(COMMENT_1)
@@ -90,16 +76,10 @@ fn comment_tests() -> Result<(), String> {
 
   assert_eq!(
     Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("a")),
-      Cirru::Leaf(String::from("b")),
-      Cirru::List(vec![
-        Cirru::Leaf(String::from(";")),
-        Cirru::Leaf(String::from("d")),
-      ]),
-      Cirru::List(vec![
-        Cirru::Leaf(String::from("e")),
-        Cirru::Leaf(String::from("f")),
-      ])
+      Cirru::leaf("a"),
+      Cirru::leaf("b"),
+      Cirru::List(vec![Cirru::leaf(";"), Cirru::leaf("d"),]),
+      Cirru::List(vec![Cirru::leaf("e"), Cirru::leaf("f"),])
     ])])
     .to_lisp()?,
     String::from(COMMENT_2)
@@ -141,16 +121,10 @@ const BIGGER_CODE: &str = r#"
 fn format_wast_tests() -> Result<(), String> {
   assert_eq!(
     Cirru::List(vec![Cirru::List(vec![
-      Cirru::Leaf(String::from("func")),
-      Cirru::Leaf(String::from("$get_16")),
-      Cirru::List(vec![
-        Cirru::Leaf(String::from("result")),
-        Cirru::Leaf(String::from("i32")),
-      ]),
-      Cirru::List(vec![
-        Cirru::Leaf(String::from("i32.const")),
-        Cirru::Leaf(String::from("16")),
-      ]),
+      Cirru::leaf("func"),
+      Cirru::leaf("$get_16"),
+      Cirru::List(vec![Cirru::leaf("result"), Cirru::leaf("i32"),]),
+      Cirru::List(vec![Cirru::leaf("i32.const"), Cirru::leaf("16"),]),
     ])])
     .to_lisp()?,
     String::from(SIMPLE_CODE)

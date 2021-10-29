@@ -1,4 +1,4 @@
-use cirru_parser::{format, parse, CirruWriterOptions};
+use cirru_parser::{format, parse, Cirru, CirruWriterOptions};
 // use std::collections::hash_map::DefaultHasher;
 use std::fs;
 // use std::hash::{Hash, Hasher};
@@ -30,11 +30,11 @@ defn fib (n)
 
   // println!(
   //   "{} {}",
-  //   Cirru::Leaf(String::from("a")) < Cirru::Leaf(String::from("b")),
-  //   Cirru::List(vec![Cirru::Leaf(String::from("a"))]) < Cirru::Leaf(String::from("b"))
+  //   Cirru::leaf("a") < Cirru::leaf("b"),
+  //   Cirru::List(vec![Cirru::leaf("a")]) < Cirru::leaf("b")
   // );
 
   // let mut hasher = DefaultHasher::new();
-  // Cirru::Leaf(String::from("a")).hash(&mut hasher);
+  // Cirru::leaf("a").hash(&mut hasher);
   // println!("{:x}", hasher.finish());
 }

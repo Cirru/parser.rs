@@ -156,4 +156,8 @@ impl Cirru {
       Cirru::List(xs) => s_expr::format_to_lisp(xs.to_owned()),
     }
   }
+
+  pub fn leaf<T: Into<String>>(s: T) -> Self {
+    Cirru::Leaf(s.into())
+  }
 }
