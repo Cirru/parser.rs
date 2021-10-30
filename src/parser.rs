@@ -28,6 +28,8 @@ mod s_expr;
 mod tree;
 mod writer;
 
+use std::cmp;
+
 use primes::CirruLexState;
 use tree::{resolve_comma, resolve_dollar};
 
@@ -286,8 +288,8 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
           acc.push(CirruLexItem::Close);
           pointer += 1;
         }
-        CirruLexItem::Indent(n) => match n {
-          _ if n > level => {
+        CirruLexItem::Indent(n) => match n.cmp(&level) {
+          cmp::Ordering::Greater => {
             let delta = n - level;
             for _ in 0..delta {
               acc.push(CirruLexItem::Open);
@@ -295,7 +297,7 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             pointer += 1;
             level = n;
           }
-          _ if n < level => {
+          cmp::Ordering::Less => {
             let delta = level - n;
             for _ in 0..delta {
               acc.push(CirruLexItem::Close);
@@ -305,7 +307,7 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
             pointer += 1;
             level = n;
           }
-          _ => {
+          cmp::Ordering::Equal => {
             if acc.is_empty() {
               acc = vec![];
             } else {

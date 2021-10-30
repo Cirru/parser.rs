@@ -2,27 +2,18 @@ use cirru_parser::Cirru;
 
 #[test]
 fn test_eq() {
+  assert_eq!(Cirru::leaf("a"), Cirru::leaf("a"));
+  assert_ne!(Cirru::leaf("b"), Cirru::leaf("a"));
+  assert_ne!(Cirru::leaf("a"), Cirru::List(vec![Cirru::leaf("a")]),);
   assert_eq!(
-    Cirru::Leaf(String::from("a")),
-    Cirru::Leaf(String::from("a"))
-  );
-  assert_ne!(
-    Cirru::Leaf(String::from("b")),
-    Cirru::Leaf(String::from("a"))
-  );
-  assert_ne!(
-    Cirru::Leaf(String::from("a")),
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))]),
-  );
-  assert_eq!(
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))]),
-    Cirru::List(vec![Cirru::Leaf(String::from("a"))]),
+    Cirru::List(vec![Cirru::leaf("a")]),
+    Cirru::List(vec![Cirru::leaf("a")]),
   );
 }
 
 #[test]
 fn test_fmt() {
-  let a = Cirru::Leaf(String::from("na"));
+  let a = Cirru::leaf("na");
   assert_eq!(format!("{}", a), "na");
 
   let b = a.to_owned();
@@ -32,6 +23,6 @@ fn test_fmt() {
 
 #[test]
 fn test_len() {
-  assert_eq!(1, Cirru::Leaf(String::from("1")).len());
-  assert_eq!(1, Cirru::List(vec![Cirru::Leaf(String::from("1"))]).len());
+  assert_eq!(1, Cirru::leaf("1").len());
+  assert_eq!(1, Cirru::List(vec![Cirru::leaf("1")]).len());
 }

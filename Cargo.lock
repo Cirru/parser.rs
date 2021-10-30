@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "cirru_parser"
-version = "0.1.8"
+version = "0.1.10"
 dependencies = [
  "serde_json",
 ]

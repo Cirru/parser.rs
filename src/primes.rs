@@ -76,7 +76,8 @@ fn is_normal_str(tok: &str) -> bool {
 /// escape_cirru_leaf("a b"); // "\"a b\""
 /// ```
 pub fn escape_cirru_leaf(s: &str) -> String {
-  let mut chunk = String::from("\"");
+  let mut chunk = String::with_capacity(s.len() + 1);
+  chunk.push('\"');
   if is_normal_str(s) {
     chunk.push_str(s);
   } else {
@@ -155,5 +156,9 @@ impl Cirru {
       Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {}", self)),
       Cirru::List(xs) => s_expr::format_to_lisp(xs.to_owned()),
     }
+  }
+
+  pub fn leaf<T: Into<String>>(s: T) -> Self {
+    Cirru::Leaf(s.into())
   }
 }
