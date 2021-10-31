@@ -30,7 +30,7 @@ fn comma_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
               before.push(Cirru::List(resolve_comma(xs)));
             }
             Cirru::Leaf(s) => {
-              if s == "," {
+              if &**s == "," {
                 before.extend(resolve_comma(&xs[1..]))
               } else {
                 before.push(Cirru::List(resolve_comma(xs)));
@@ -75,11 +75,11 @@ fn dollar_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
           pointer += 1;
         }
         Cirru::Leaf(s) => {
-          if s == "$" {
+          if &**s == "$" {
             before.push(Cirru::List(resolve_dollar(&after[pointer + 1..])));
             pointer = after.len();
           } else {
-            before.push(Cirru::Leaf(s.to_string()));
+            before.push(Cirru::Leaf(s.to_owned()));
             pointer += 1;
           }
         }

@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.1.10"
+version = "0.1.12"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -22,6 +22,8 @@ exclude = [
 
 [dev-dependencies]
 serde_json = "1.0.68"
+criterion = "0.3"
+
 
 [lib]
 name = "cirru_parser"
@@ -34,3 +36,7 @@ bench = true
 # debug = true
 
 exclude = ["/wasm-example"]
+
+[[bench]]
+name = "parsing"
+harness = false
