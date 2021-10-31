@@ -10,7 +10,7 @@ use crate::s_expr;
 /// Cirru uses nested Vecters and Strings as data structure
 #[derive(Clone)]
 pub enum Cirru {
-  Leaf(String),
+  Leaf(Box<str>),
   List(Vec<Cirru>),
 }
 
@@ -159,6 +159,6 @@ impl Cirru {
   }
 
   pub fn leaf<T: Into<String>>(s: T) -> Self {
-    Cirru::Leaf(s.into())
+    Cirru::Leaf(s.into().into_boxed_str())
   }
 }

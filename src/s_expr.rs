@@ -53,7 +53,7 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
         } else if token.contains(' ') || token.contains('\n') || token.contains('\"') {
           Err(format!("bad token content: {}", token))
         } else {
-          Ok(token.to_owned())
+          Ok((**token).to_string())
         }
       }
     }
@@ -100,6 +100,6 @@ pub fn is_nested(node: &Cirru) -> bool {
 pub fn is_comment_mark(node: &Cirru) -> bool {
   match node {
     Cirru::List(_) => false,
-    Cirru::Leaf(s) => s == ";" || s == ";;",
+    Cirru::Leaf(s) => &(**s) == ";" || &(**s) == ";;",
   }
 }

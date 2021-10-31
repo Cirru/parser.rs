@@ -13,7 +13,7 @@ pub fn from_json_value(x: Value) -> Cirru {
       }
       Cirru::List(r)
     }
-    Value::String(s) => Cirru::Leaf(s),
+    Value::String(s) => Cirru::Leaf(s.into_boxed_str()),
     _ => unreachable!("only string and array are expected"),
   }
 }
@@ -31,7 +31,7 @@ pub fn from_json_str(s: &str) -> Result<Cirru, String> {
 /// generates JSON from Cirru Data
 pub fn to_json_value(x: Cirru) -> Value {
   match x {
-    Cirru::Leaf(s) => Value::String(s),
+    Cirru::Leaf(s) => Value::String((*s).to_string()),
     Cirru::List(ys) => {
       let mut zs: Vec<Value> = vec![];
       for y in ys {

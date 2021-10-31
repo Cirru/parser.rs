@@ -84,7 +84,7 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
               pointer_stack.push(pointer);
               pointer = vec![];
             }
-            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s)),
+            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.into_boxed_str())),
             CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
           }
         }
