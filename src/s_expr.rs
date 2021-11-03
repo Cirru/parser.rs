@@ -1,11 +1,11 @@
 use crate::primes::Cirru;
 
 /// format to Cirru to WAT
-pub fn format_to_lisp(xs: Vec<Cirru>) -> Result<String, String> {
+pub fn format_to_lisp(xs: &[Cirru]) -> Result<String, String> {
   let mut content: String = String::from("\n");
 
   for expr in xs {
-    content = format!("{}{}\n", content, format_expr(&expr, 0)?);
+    content = format!("{}{}\n", content, format_expr(expr, 0)?);
   }
 
   Ok(content)
