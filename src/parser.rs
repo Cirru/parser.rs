@@ -337,7 +337,7 @@ pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
 
 pub fn cirru_to_lisp(code: String) -> String {
   match parse(&code) {
-    Ok(tree) => match format_to_lisp(tree) {
+    Ok(tree) => match format_to_lisp(&tree) {
       Ok(s) => s,
       Err(_) => panic!("failed to convert to lisp"),
     },

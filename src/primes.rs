@@ -154,7 +154,7 @@ impl Cirru {
   pub fn to_lisp(&self) -> Result<String, String> {
     match self {
       Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {}", self)),
-      Cirru::List(xs) => s_expr::format_to_lisp(xs.to_owned()),
+      Cirru::List(xs) => s_expr::format_to_lisp(xs),
     }
   }
 
