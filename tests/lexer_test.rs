@@ -103,3 +103,23 @@ fn lex_strings() -> Result<(), String> {
 
   Ok(())
 }
+
+#[test]
+fn escape_chars() -> Result<(), String> {
+  assert_eq!(
+    lex(r#""\u{6c49}""#)?,
+    vec![
+      CirruLexItem::Indent(0),
+      CirruLexItem::Str(String::from(r#"\u{6c49}"#))
+    ]
+  );
+
+  assert_eq!(
+    lex(r#""\'""#)?,
+    vec![
+      CirruLexItem::Indent(0),
+      CirruLexItem::Str(String::from(r#"'"#))
+    ]
+  );
+  Ok(())
+}
