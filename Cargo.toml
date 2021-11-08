@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.1.13"
+version = "0.1.14"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -21,7 +21,7 @@ exclude = [
 [dependencies]
 
 [dev-dependencies]
-serde_json = "1.0.68"
+serde_json = "1.0.69"
 criterion = "0.3"
 
 

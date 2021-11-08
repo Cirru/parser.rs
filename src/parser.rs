@@ -111,7 +111,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   let mut buffer = String::from("");
   let code = initial_code;
 
-  for c in code.chars() {
+  for (idx, c) in code.chars().enumerate() {
     match state {
       CirruLexState::Space => match c {
         ' ' => {
@@ -196,6 +196,10 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           state = CirruLexState::Str;
           buffer.push('"');
         }
+        '\'' => {
+          state = CirruLexState::Str;
+          buffer.push('\'');
+        }
         't' => {
           state = CirruLexState::Str;
           buffer.push('\t');
@@ -204,11 +208,29 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           state = CirruLexState::Str;
           buffer.push('\n');
         }
+        'u' => {
+          // not supporting, but don't panic
+          let end = idx + 10;
+          let peek = if end >= code.len() {
+            &code[idx..]
+          } else {
+            &code[idx..end]
+          };
+          println!("Unicode escaping is not supported yet: {:?} ...", peek);
+          buffer.push('\\');
+          buffer.push('u');
+          state = CirruLexState::Str;
+        }
         '\\' => {
           state = CirruLexState::Str;
           buffer.push('\\');
         }
-        _ => return Err(String::from("unexpected character during string escaping")),
+        _ => {
+          return Err(format!(
+            "unexpected character during string escaping: {:?}",
+            c
+          ))
+        }
       },
       CirruLexState::Indent => match c {
         ' ' => {
