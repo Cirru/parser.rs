@@ -37,7 +37,7 @@ pub use primes::{escape_cirru_leaf, Cirru, CirruLexItem, CirruLexItemList};
 pub use s_expr::format_to_lisp;
 pub use writer::{format, CirruWriterOptions};
 
-fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
+fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
   let mut acc: Vec<Cirru> = vec![];
   let mut idx = 0;
   let mut pull_token = || {
@@ -95,12 +95,12 @@ fn build_exprs(tokens: Vec<CirruLexItem>) -> Result<Vec<Cirru>, String> {
   }
 }
 
-fn parse_indentation(buffer: String) -> Result<CirruLexItem, String> {
+fn parse_indentation(buffer: &str) -> Result<CirruLexItem, String> {
   let size = buffer.len();
   if size % 2 == 0 {
     Ok(CirruLexItem::Indent(size / 2))
   } else {
-    Err(format!("odd indentation size, {}", buffer.escape_default()))
+    Err(format!("odd indentation size, {:?}", buffer))
   }
 }
 
@@ -242,13 +242,13 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           buffer = String::from("");
         }
         '"' => {
-          let level = parse_indentation(buffer)?;
+          let level = parse_indentation(&buffer)?;
           acc.push(level);
           state = CirruLexState::Str;
           buffer = String::from("");
         }
         '(' => {
-          let level = parse_indentation(buffer)?;
+          let level = parse_indentation(&buffer)?;
           acc.push(level);
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
@@ -256,7 +256,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         }
         ')' => return Err(String::from("unexpected ) at line start")),
         _ => {
-          let level = parse_indentation(buffer)?;
+          let level = parse_indentation(&buffer)?;
           acc.push(level);
           state = CirruLexState::Token;
           buffer = String::from(c);
@@ -278,10 +278,9 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
 }
 
 /// internal function for figuring out indentations after lexing
-pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemList {
+pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
   let mut acc: CirruLexItemList = vec![];
   let mut level = 0;
-  let tokens: CirruLexItemList = initial_tokens;
   let mut pointer = 0;
   loop {
     if pointer >= tokens.len() {
@@ -350,15 +349,15 @@ pub fn resolve_indentations(initial_tokens: CirruLexItemList) -> CirruLexItemLis
 /// cirru_parser::parse("def a 1");
 /// ```
 pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
-  let tokens = resolve_indentations(lex(code)?);
+  let tokens = resolve_indentations(&lex(code)?);
   // println!("{:?}", tokens);
-  let tree = build_exprs(tokens)?;
+  let tree = build_exprs(&tokens)?;
   // println!("tree {:?}", tree);
   Ok(resolve_comma(&resolve_dollar(&tree)))
 }
 
-pub fn cirru_to_lisp(code: String) -> String {
-  match parse(&code) {
+pub fn cirru_to_lisp(code: &str) -> String {
+  match parse(code) {
     Ok(tree) => match format_to_lisp(&tree) {
       Ok(s) => s,
       Err(_) => panic!("failed to convert to lisp"),

@@ -25,6 +25,12 @@ fn write_demo() -> Result<(), String> {
     }
   };
 
+  if let Cirru::List(xs) = from_json_str(r#"[["中文"], ["中文"]]"#).unwrap() {
+    assert_eq!("\n\"中文\"\n\n\"中文\"\n", format(&xs, writer_options)?)
+  } else {
+    panic!("unexpected leaf here")
+  }
+
   Ok(())
 }
 

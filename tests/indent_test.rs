@@ -4,7 +4,7 @@ use cirru_parser::{lex, resolve_indentations};
 #[test]
 fn handle_indentation() -> Result<(), String> {
   assert_eq!(
-    resolve_indentations(lex("a\nb")?),
+    resolve_indentations(&lex("a\nb")?),
     vec![
       CirruLexItem::Open,
       CirruLexItem::Str(String::from("a")),
@@ -15,7 +15,7 @@ fn handle_indentation() -> Result<(), String> {
     ]
   );
   assert_eq!(
-    resolve_indentations(lex("a\n  b\nc")?),
+    resolve_indentations(&lex("a\n  b\nc")?),
     vec![
       CirruLexItem::Open,
       CirruLexItem::Str(String::from("a")),
@@ -29,7 +29,7 @@ fn handle_indentation() -> Result<(), String> {
     ]
   );
   assert_eq!(
-    resolve_indentations(lex("a\n  b c\nd")?),
+    resolve_indentations(&lex("a\n  b c\nd")?),
     vec![
       CirruLexItem::Open,
       CirruLexItem::Str(String::from("a")),
@@ -44,7 +44,7 @@ fn handle_indentation() -> Result<(), String> {
     ]
   );
   assert_eq!(
-    resolve_indentations(lex("a\n    b c\n    d e\n  f")?),
+    resolve_indentations(&lex("a\n    b c\n    d e\n  f")?),
     vec![
       CirruLexItem::Open,
       CirruLexItem::Str(String::from("a")),
