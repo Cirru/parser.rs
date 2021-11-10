@@ -87,6 +87,7 @@ pub fn escape_cirru_leaf(s: &str) -> String {
         '\t' => chunk.push_str("\\t"),
         '\"' => chunk.push_str("\\\""),
         '\\' => chunk.push_str("\\\\"),
+        '\'' => chunk.push_str("\\'"),
         _ => chunk.push(c),
       }
     }
