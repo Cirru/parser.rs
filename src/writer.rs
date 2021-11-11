@@ -75,7 +75,16 @@ fn generate_leaf(s: &str) -> String {
   } else {
     let mut ret = String::with_capacity(s.len() + 2);
     ret.push('"');
-    ret.push_str(&str::escape_default(s).to_string());
+    for c in s.chars() {
+      match c {
+        '\n' => ret.push_str("\\n"),
+        '\t' => ret.push_str("\\t"),
+        '\"' => ret.push_str("\\\""),
+        '\\' => ret.push_str("\\\\"),
+        '\'' => ret.push_str("\\'"),
+        _ => ret.push(c),
+      }
+    }
     ret.push('"');
     ret
   }
@@ -160,7 +169,7 @@ fn generate_tree(
 
     // println!("\nloop {:?} {:?}", prev_kind, kind);
     // println!("cursor {:?}", cursor);
-    // println!("{}", str::escape_default(&result));
+    // println!("{:?}", result);
 
     let child: String = match cursor {
       Cirru::Leaf(s) => generate_leaf(s),

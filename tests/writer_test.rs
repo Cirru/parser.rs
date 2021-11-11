@@ -25,6 +25,12 @@ fn write_demo() -> Result<(), String> {
     }
   };
 
+  if let Cirru::List(xs) = from_json_str(r#"[["中文"], ["中文"]]"#).unwrap() {
+    assert_eq!("\n\"中文\"\n\n\"中文\"\n", format(&xs, writer_options)?)
+  } else {
+    panic!("unexpected leaf here")
+  }
+
   Ok(())
 }
 
@@ -106,5 +112,8 @@ fn leaves_escapeing() {
   assert_eq!("\"a\"", escape_cirru_leaf("a"));
   assert_eq!("\"a b\"", escape_cirru_leaf("a b"));
   assert_eq!("\"a!+-b\"", escape_cirru_leaf("a!+-b"));
-  assert_eq!("\"a\\nb\"", escape_cirru_leaf("a\nb"))
+  assert_eq!("\"a\\nb\"", escape_cirru_leaf("a\nb"));
+
+  assert_eq!("\"中文\"", escape_cirru_leaf("中文"));
+  assert_eq!("\"中文\\n\"", escape_cirru_leaf("中文\n"));
 }

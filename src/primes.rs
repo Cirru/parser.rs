@@ -81,7 +81,16 @@ pub fn escape_cirru_leaf(s: &str) -> String {
   if is_normal_str(s) {
     chunk.push_str(s);
   } else {
-    chunk.push_str(&s.escape_default().to_string());
+    for c in s.chars() {
+      match c {
+        '\n' => chunk.push_str("\\n"),
+        '\t' => chunk.push_str("\\t"),
+        '\"' => chunk.push_str("\\\""),
+        '\\' => chunk.push_str("\\\\"),
+        '\'' => chunk.push_str("\\'"),
+        _ => chunk.push(c),
+      }
+    }
   }
   chunk.push('"');
   chunk

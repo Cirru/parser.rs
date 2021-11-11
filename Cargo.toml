@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.1.14"
+version = "0.1.16"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -12,7 +12,12 @@ readme = "README.md"
 exclude = [
   "tests/cirru/*",
   "tests/data/*",
+  "tests/writer_cirru/*",
+  "tests/writer_data/*",
   "src/main.rs",
+  "/wasm-example",
+  "examples/",
+  ".github/"
 ]
 
 
@@ -34,8 +39,6 @@ bench = true
 
 # [profile.release]
 # debug = true
-
-exclude = ["/wasm-example"]
 
 [[bench]]
 name = "parsing"
