@@ -49,7 +49,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
     Some(c)
   };
   loop {
-    let chunk = pull_token(); // TODO Option
+    let chunk = pull_token();
 
     if chunk == None {
       return Ok(acc);
@@ -59,7 +59,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
         let mut pointer: Vec<Cirru> = vec![];
         let mut pointer_stack: Vec<Vec<Cirru>> = vec![];
         loop {
-          let cursor = pull_token(); // TODO Option
+          let cursor = pull_token();
           if cursor == None {
             return Err(String::from("unexpected end of file"));
           }
@@ -84,7 +84,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
               pointer_stack.push(pointer);
               pointer = vec![];
             }
-            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.into_boxed_str())),
+            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.into())),
             CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
           }
         }
@@ -97,8 +97,9 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
 
 fn parse_indentation(buffer: &str) -> Result<CirruLexItem, String> {
   let size = buffer.len();
-  if size % 2 == 0 {
-    Ok(CirruLexItem::Indent(size / 2))
+  if size & 0x1 == 0x0 {
+    // even number
+    Ok(CirruLexItem::Indent(size >> 1))
   } else {
     Err(format!("odd indentation size, {:?}", buffer))
   }

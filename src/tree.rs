@@ -24,8 +24,7 @@ fn comma_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
     match cursor {
       Cirru::List(xs) => {
         if !xs.is_empty() {
-          let head = &xs[0];
-          match head {
+          match &xs[0] {
             Cirru::List(_) => {
               before.push(Cirru::List(resolve_comma(xs)));
             }

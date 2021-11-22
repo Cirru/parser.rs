@@ -13,7 +13,7 @@ enum WriterNode {
 
 const CHAR_CLOSE: char = ')';
 const CHAR_OPEN: char = '(';
-const ALLOWED_CHARS: &str = "-~_@#$&%!?^*=+|\\/<>[]{}.,:;'";
+const ALLOWED_CHARS: &str = "$-:<>[]{}*=+.,\\/!?~_@#&%^|;'";
 
 fn is_a_digit(c: char) -> bool {
   let n = c as usize;
@@ -52,7 +52,7 @@ fn is_boxed(ys: &[Cirru]) -> bool {
 }
 
 fn is_simple_char(x: char) -> bool {
-  is_a_digit(x) || is_a_letter(x)
+  is_a_letter(x) || is_a_digit(x)
 }
 
 fn is_char_allowed(x: char) -> bool {
