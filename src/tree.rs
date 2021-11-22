@@ -4,7 +4,7 @@ pub use primes::Cirru;
 
 pub fn resolve_comma(xs: &[Cirru]) -> Vec<Cirru> {
   if xs.is_empty() {
-    return vec![];
+    vec![]
   } else {
     comma_helper(xs)
   }
@@ -20,8 +20,7 @@ fn comma_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
     if pointer >= after.len() {
       return before;
     }
-    let cursor = &after[pointer];
-    match cursor {
+    match &after[pointer] {
       Cirru::List(xs) => {
         if !xs.is_empty() {
           match &xs[0] {
@@ -41,7 +40,7 @@ fn comma_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
         }
       }
       Cirru::Leaf(_) => {
-        before.push(cursor.to_owned());
+        before.push(after[pointer].to_owned());
       }
     }
     pointer += 1;
@@ -66,9 +65,7 @@ fn dollar_helper(initial_after: &[Cirru]) -> Vec<Cirru> {
     if pointer >= after.len() {
       return before;
     } else {
-      let cursor = &after[pointer];
-
-      match cursor {
+      match &after[pointer] {
         Cirru::List(xs) => {
           before.push(Cirru::List(resolve_dollar(xs)));
           pointer += 1;
