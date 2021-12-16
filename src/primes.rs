@@ -5,8 +5,11 @@ use std::hash::{Hash, Hasher};
 use std::str;
 // use std::marker::Copy;
 
+#[cfg(feature = "use-serde")]
 use serde::de::{SeqAccess, Visitor};
+#[cfg(feature = "use-serde")]
 use serde::ser::SerializeSeq;
+#[cfg(feature = "use-serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::s_expr;
@@ -176,6 +179,7 @@ impl Cirru {
   }
 }
 
+#[cfg(feature = "use-serde")]
 impl Serialize for Cirru {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -194,6 +198,7 @@ impl Serialize for Cirru {
   }
 }
 
+#[cfg(feature = "use-serde")]
 impl<'de> Visitor<'de> for Cirru {
   type Value = Cirru;
 
@@ -218,6 +223,7 @@ impl<'de> Visitor<'de> for Cirru {
   }
 }
 
+#[cfg(feature = "use-serde")]
 impl<'de> Deserialize<'de> for Cirru {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
   where

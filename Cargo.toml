@@ -22,14 +22,17 @@ exclude = [
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = []
+use-serde = ["serde", "serde_json"]
 
+# ['cfg(features = "use-serde")'.dependencies]
 [dependencies]
-serde = "1.0.131"
+serde = { version = "1.0.131", optional = true }
+serde_json = { version = "1.0.71", optional = true }
 
 [dev-dependencies]
-serde_json = "1.0.71"
 criterion = "0.3"
-
 
 [lib]
 name = "cirru_parser"

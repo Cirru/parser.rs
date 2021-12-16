@@ -1,3 +1,5 @@
+extern crate cirru_parser;
+
 use cirru_parser::Cirru;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};

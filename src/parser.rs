@@ -28,6 +28,12 @@ mod s_expr;
 mod tree;
 mod writer;
 
+#[cfg(feature = "use-serde")]
+mod json;
+
+#[cfg(feature = "use-serde")]
+pub use json::*;
+
 use std::cmp;
 
 use primes::CirruLexState;
