@@ -5,17 +5,7 @@ use cirru_parser::Cirru;
 /// parse JSON `["a", ["b"]]` into Cirru,
 /// only Arrays and Strings are accepted
 pub fn from_json_value(x: Value) -> Cirru {
-  match x {
-    Value::Array(ys) => {
-      let mut r: Vec<Cirru> = vec![];
-      for y in ys {
-        r.push(from_json_value(y));
-      }
-      Cirru::List(r)
-    }
-    Value::String(s) => Cirru::Leaf(s.into_boxed_str()),
-    _ => unreachable!("only string and array are expected"),
-  }
+  serde_json::from_value(x).unwrap()
 }
 
 /// parse JSON string `r#"["a", ["b"]]"#` into Cirru,
@@ -30,16 +20,7 @@ pub fn from_json_str(s: &str) -> Result<Cirru, String> {
 
 /// generates JSON from Cirru Data
 pub fn to_json_value(x: Cirru) -> Value {
-  match x {
-    Cirru::Leaf(s) => Value::String((*s).to_string()),
-    Cirru::List(ys) => {
-      let mut zs: Vec<Value> = vec![];
-      for y in ys {
-        zs.push(to_json_value(y));
-      }
-      Value::Array(zs)
-    }
-  }
+  serde_json::to_value(x).unwrap()
 }
 
 /// generates JSON string from Cirru Data
