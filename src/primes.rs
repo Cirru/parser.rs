@@ -5,6 +5,13 @@ use std::hash::{Hash, Hasher};
 use std::str;
 // use std::marker::Copy;
 
+#[cfg(feature = "use-serde")]
+use serde::de::{SeqAccess, Visitor};
+#[cfg(feature = "use-serde")]
+use serde::ser::SerializeSeq;
+#[cfg(feature = "use-serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 use crate::s_expr;
 
 /// Cirru uses nested Vecters and Strings as data structure
@@ -169,5 +176,59 @@ impl Cirru {
 
   pub fn leaf<T: Into<String>>(s: T) -> Self {
     Cirru::Leaf(s.into().into_boxed_str())
+  }
+}
+
+#[cfg(feature = "use-serde")]
+impl Serialize for Cirru {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    match self {
+      Cirru::Leaf(s) => serializer.serialize_str(s),
+      Cirru::List(xs) => {
+        let mut seq = serializer.serialize_seq(Some(self.len()))?;
+        for e in xs {
+          seq.serialize_element(e)?;
+        }
+        seq.end()
+      }
+    }
+  }
+}
+
+#[cfg(feature = "use-serde")]
+impl<'de> Visitor<'de> for Cirru {
+  type Value = Cirru;
+
+  fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    formatter.write_str("a seq for Cirru")
+  }
+
+  fn visit_seq<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+  where
+    M: SeqAccess<'de>,
+  {
+    let mut seq = Vec::with_capacity(access.size_hint().unwrap_or(0));
+    while let Some(el) = access.next_element()? {
+      seq.push(el);
+    }
+
+    Ok(Cirru::List(seq))
+  }
+
+  fn visit_str<E>(self, s: &str) -> Result<Self::Value, E> {
+    Ok(Cirru::leaf(s))
+  }
+}
+
+#[cfg(feature = "use-serde")]
+impl<'de> Deserialize<'de> for Cirru {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    deserializer.deserialize_any(Cirru::List(Vec::new()))
   }
 }

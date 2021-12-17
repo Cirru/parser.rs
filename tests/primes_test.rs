@@ -1,3 +1,5 @@
+extern crate cirru_parser;
+
 use cirru_parser::Cirru;
 
 #[test]
