@@ -1,4 +1,4 @@
-use cirru_parser::{lex, parse, Cirru};
+use cirru_parser::parse;
 
 pub fn main() {
   println!("{:?}", parse("a \"b\\u{87DF}\""));

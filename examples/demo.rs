@@ -1,11 +1,11 @@
-use cirru_parser::{format, parse, Cirru, CirruWriterOptions};
+use cirru_parser::{format, parse, CirruWriterOptions};
 // use std::collections::hash_map::DefaultHasher;
 use std::fs;
 // use std::hash::{Hash, Hasher};
 
 // TODO currenly main only used to debugging, logs in tests are suppressed
 fn main() {
-  let demo = String::from(
+  let _demo = String::from(
     r#"
 def a 1
 
