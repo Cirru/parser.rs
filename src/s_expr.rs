@@ -49,7 +49,7 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
       } else {
         let s0 = token.chars().next().unwrap();
         if s0 == '|' || s0 == '"' {
-          Ok(format!("\"{}\"", token[1..].escape_default().to_string()))
+          Ok(format!("\"{}\"", token[1..].escape_default()))
         } else if token.contains(' ') || token.contains('\n') || token.contains('\"') {
           Err(format!("bad token content: {}", token))
         } else {

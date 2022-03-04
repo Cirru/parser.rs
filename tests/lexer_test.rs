@@ -5,19 +5,13 @@ use cirru_parser::CirruLexItem;
 
 #[test]
 fn lexer() -> Result<(), String> {
-  assert_eq!(
-    lex("a")?,
-    vec![
-      CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a"))
-    ],
-  );
+  assert_eq!(lex("a")?, vec![CirruLexItem::Indent(0), CirruLexItem::Str("a".into())],);
   assert_eq!(
     lex("a b")?,
     vec![
       CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a")),
-      CirruLexItem::Str(String::from("b"))
+      CirruLexItem::Str("a".into()),
+      CirruLexItem::Str("b".into())
     ],
   );
   assert_eq!(
@@ -25,7 +19,7 @@ fn lexer() -> Result<(), String> {
     vec![
       CirruLexItem::Indent(0),
       CirruLexItem::Open,
-      CirruLexItem::Str(String::from("a")),
+      CirruLexItem::Str("a".into()),
       CirruLexItem::Close,
     ],
   );
@@ -34,8 +28,8 @@ fn lexer() -> Result<(), String> {
     vec![
       CirruLexItem::Indent(0),
       CirruLexItem::Open,
-      CirruLexItem::Str(String::from("a")),
-      CirruLexItem::Str(String::from("b")),
+      CirruLexItem::Str("a".into()),
+      CirruLexItem::Str("b".into()),
       CirruLexItem::Close,
     ],
   );
@@ -44,8 +38,8 @@ fn lexer() -> Result<(), String> {
     vec![
       CirruLexItem::Indent(0),
       CirruLexItem::Open,
-      CirruLexItem::Str(String::from("a")),
-      CirruLexItem::Str(String::from("b")),
+      CirruLexItem::Str("a".into()),
+      CirruLexItem::Str("b".into()),
       CirruLexItem::Close,
     ],
   );
@@ -58,20 +52,20 @@ fn lexer_with_indent() -> Result<(), String> {
     lex("a\n  b")?,
     vec![
       CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a")),
+      CirruLexItem::Str("a".into()),
       CirruLexItem::Indent(1),
-      CirruLexItem::Str(String::from("b")),
+      CirruLexItem::Str("b".into()),
     ],
   );
   assert_eq!(
     lex("a\n  b\nc")?,
     vec![
       CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a")),
+      CirruLexItem::Str("a".into()),
       CirruLexItem::Indent(1),
-      CirruLexItem::Str(String::from("b")),
+      CirruLexItem::Str("b".into()),
       CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("c")),
+      CirruLexItem::Str("c".into()),
     ],
   );
   Ok(())
@@ -79,29 +73,11 @@ fn lexer_with_indent() -> Result<(), String> {
 
 #[test]
 fn lex_strings() -> Result<(), String> {
-  assert_eq!(
-    lex("\"a\"")?,
-    vec![
-      CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a"))
-    ],
-  );
+  assert_eq!(lex("\"a\"")?, vec![CirruLexItem::Indent(0), CirruLexItem::Str("a".into())],);
 
-  assert_eq!(
-    lex(r#""a\\""#)?,
-    vec![
-      CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a\\"))
-    ],
-  );
+  assert_eq!(lex(r#""a\\""#)?, vec![CirruLexItem::Indent(0), CirruLexItem::Str("a\\".into())],);
 
-  assert_eq!(
-    lex(r#""a\n""#)?,
-    vec![
-      CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from("a\n"))
-    ],
-  );
+  assert_eq!(lex(r#""a\n""#)?, vec![CirruLexItem::Indent(0), CirruLexItem::Str("a\n".into())],);
 
   Ok(())
 }
@@ -110,18 +86,9 @@ fn lex_strings() -> Result<(), String> {
 fn escape_chars() -> Result<(), String> {
   assert_eq!(
     lex(r#""\u{6c49}""#)?,
-    vec![
-      CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from(r#"\u{6c49}"#))
-    ]
+    vec![CirruLexItem::Indent(0), CirruLexItem::Str(r#"\u{6c49}"#.into())]
   );
 
-  assert_eq!(
-    lex(r#""\'""#)?,
-    vec![
-      CirruLexItem::Indent(0),
-      CirruLexItem::Str(String::from(r#"'"#))
-    ]
-  );
+  assert_eq!(lex(r#""\'""#)?, vec![CirruLexItem::Indent(0), CirruLexItem::Str(r#"'"#.into())]);
   Ok(())
 }

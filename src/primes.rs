@@ -67,8 +67,7 @@ impl fmt::Display for Cirru {
 
 fn is_normal_str(tok: &str) -> bool {
   for s in tok.chars() {
-    if !matches!(s, 'A'..='Z' | 'a'..='z'|'0'..='9' | '-' | '?' |'!'|'+'|'*'|'$'|'@'|'#'|'%'|'&'|'_'|'='|'|'|':'|'.'|'<'|'>')
-    {
+    if !matches!(s, 'A'..='Z' | 'a'..='z'|'0'..='9' | '-' | '?' |'!'|'+'|'*'|'$'|'@'|'#'|'%'|'&'|'_'|'='|'|'|':'|'.'|'<'|'>') {
       return false;
     }
   }
@@ -106,7 +105,7 @@ pub fn escape_cirru_leaf(s: &str) -> String {
 impl fmt::Debug for Cirru {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     // just use fn from Display
-    write!(f, "{}", format!("{}", self))
+    write!(f, "{}", self)
   }
 }
 
