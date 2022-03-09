@@ -34,7 +34,7 @@ mod json;
 #[cfg(feature = "use-serde")]
 pub use json::*;
 
-use std::cmp;
+use std::cmp::Ordering::*;
 
 use primes::CirruLexState;
 use tree::{resolve_comma, resolve_dollar};
@@ -91,7 +91,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
               pointer_stack.push(pointer);
               pointer = vec![];
             }
-            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.to_owned().into())),
+            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.as_str().into())),
             CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
           }
         }
@@ -219,11 +219,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         'u' => {
           // not supporting, but don't panic
           let end = idx + 10;
-          let peek = if end >= code.len() {
-            &code[idx..]
-          } else {
-            &code[idx..end]
-          };
+          let peek = if end >= code.len() { &code[idx..] } else { &code[idx..end] };
           println!("Unicode escaping is not supported yet: {:?} ...", peek);
           buffer.push_str("\\u");
           state = CirruLexState::Str;
@@ -232,12 +228,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           state = CirruLexState::Str;
           buffer.push('\\');
         }
-        _ => {
-          return Err(format!(
-            "unexpected character during string escaping: {:?}",
-            c
-          ))
-        }
+        _ => return Err(format!("unexpected character during string escaping: {:?}", c)),
       },
       CirruLexState::Indent => match c {
         ' ' => {
@@ -316,7 +307,7 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
           pointer += 1;
         }
         CirruLexItem::Indent(n) => match n.cmp(&level) {
-          cmp::Ordering::Greater => {
+          Greater => {
             let delta = n - level;
             for _ in 0..delta {
               acc.push(CirruLexItem::Open);
@@ -324,7 +315,7 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
             pointer += 1;
             level = *n;
           }
-          cmp::Ordering::Less => {
+          Less => {
             let delta = level - n;
             for _ in 0..delta {
               acc.push(CirruLexItem::Close);
@@ -334,7 +325,7 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
             pointer += 1;
             level = *n;
           }
-          cmp::Ordering::Equal => {
+          Equal => {
             if acc.is_empty() {
               acc = vec![];
             } else {
