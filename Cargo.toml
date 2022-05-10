@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.1.19-a1"
+version = "0.1.19-a2"
 authors = ["题叶 <jiyinyiyong@gmail.com>"]
 edition = "2021"
 license = "MIT"
