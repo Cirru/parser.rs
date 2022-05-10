@@ -1,8 +1,8 @@
 [package]
 name = "cirru_parser"
-version = "0.1.18"
-authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
-edition = "2018"
+version = "0.1.19-a1"
+authors = ["题叶 <jiyinyiyong@gmail.com>"]
+edition = "2021"
 license = "MIT"
 description = "Parser for Cirru text syntax"
 homepage = "http://cirru.org"
@@ -23,13 +23,13 @@ exclude = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = []
-use-serde = ["serde", "serde_json"]
+default = ["serde"]
+use-json = ["serde_json"]
 
-# ['cfg(features = "use-serde")'.dependencies]
+# ['cfg(features = "use-json")'.dependencies]
 [dependencies]
-serde = { version = "1.0.131", optional = true }
-serde_json = { version = "1.0.71", optional = true }
+serde = { version = "1.0.137", optional = true }
+serde_json = { version = "1.0.81", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"

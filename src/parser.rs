@@ -28,10 +28,10 @@ mod s_expr;
 mod tree;
 mod writer;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "use-json")]
 mod json;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "use-json")]
 pub use json::*;
 
 use std::cmp::Ordering::*;

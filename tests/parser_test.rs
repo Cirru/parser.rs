@@ -1,6 +1,6 @@
 extern crate cirru_parser;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "use-json")]
 mod json_test {
   use std::fs;
   use std::io;
@@ -13,20 +13,11 @@ mod json_test {
   fn parse_demo() {
     assert_eq!(parse("a").map(Cirru::List), from_json_str(r#"[["a"]]"#));
 
-    assert_eq!(
-      parse("a b c").map(Cirru::List),
-      from_json_str(r#"[["a", "b", "c"]]"#)
-    );
+    assert_eq!(parse("a b c").map(Cirru::List), from_json_str(r#"[["a", "b", "c"]]"#));
 
-    assert_eq!(
-      parse("a\nb").map(Cirru::List),
-      from_json_str(r#"[["a"], ["b"]]"#)
-    );
+    assert_eq!(parse("a\nb").map(Cirru::List), from_json_str(r#"[["a"], ["b"]]"#));
 
-    assert_eq!(
-      parse("a (b) c").map(Cirru::List),
-      Ok(from_json_value(json!([["a", ["b"], "c"]])))
-    );
+    assert_eq!(parse("a (b) c").map(Cirru::List), Ok(from_json_value(json!([["a", ["b"], "c"]]))));
 
     assert_eq!(
       parse("a (b)\n  c").map(Cirru::List),

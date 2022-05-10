@@ -2,7 +2,7 @@ extern crate cirru_parser;
 
 use cirru_parser::escape_cirru_leaf;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "use-json")]
 mod json_write_test {
   use super::*;
 

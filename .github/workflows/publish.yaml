@@ -14,7 +14,7 @@ jobs:
         with:
           toolchain: stable
 
-      - run: cargo test --features "use-serde"
+      - run: cargo test --features "use-json"
 
       - uses: jetli/wasm-pack-action@v0.3.0
         with:
