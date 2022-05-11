@@ -2,7 +2,7 @@
 name = "cirru_parser"
 version = "0.1.18"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "Parser for Cirru text syntax"
 homepage = "http://cirru.org"
@@ -28,11 +28,11 @@ use-serde = ["serde", "serde_json"]
 
 # ['cfg(features = "use-serde")'.dependencies]
 [dependencies]
-serde = { version = "1.0.131", optional = true }
-serde_json = { version = "1.0.71", optional = true }
+serde = { version = "1.0.137", optional = true }
+serde_json = { version = "1.0.81", optional = true }
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.3.5"
 
 [lib]
 name = "cirru_parser"
