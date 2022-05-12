@@ -198,7 +198,10 @@ impl Serialize for Cirru {
 }
 
 #[cfg(feature = "use-serde")]
-impl<'de> Visitor<'de> for Cirru {
+struct CirruVisitor {}
+
+#[cfg(feature = "use-serde")]
+impl<'de> Visitor<'de> for CirruVisitor {
   type Value = Cirru;
 
   fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -228,6 +231,6 @@ impl<'de> Deserialize<'de> for Cirru {
   where
     D: Deserializer<'de>,
   {
-    deserializer.deserialize_any(Cirru::List(Vec::new()))
+    deserializer.deserialize_any(CirruVisitor {})
   }
 }
