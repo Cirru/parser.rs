@@ -1,16 +1,17 @@
 extern crate cirru_parser;
 
+use std::vec;
+
 use cirru_parser::Cirru;
 
 #[test]
 fn test_eq() {
   assert_eq!(Cirru::leaf("a"), Cirru::leaf("a"));
+  assert_eq!(Cirru::leaf("a"), "a".into());
   assert_ne!(Cirru::leaf("b"), Cirru::leaf("a"));
   assert_ne!(Cirru::leaf("a"), Cirru::List(vec![Cirru::leaf("a")]),);
-  assert_eq!(
-    Cirru::List(vec![Cirru::leaf("a")]),
-    Cirru::List(vec![Cirru::leaf("a")]),
-  );
+  assert_eq!(Cirru::List(vec![Cirru::leaf("a")]), Cirru::List(vec![Cirru::leaf("a")]),);
+  assert_eq!(Cirru::List(vec![Cirru::leaf("a")]), (vec!["a"]).into());
 }
 
 #[test]
