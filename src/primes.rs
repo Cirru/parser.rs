@@ -186,6 +186,7 @@ impl Cirru {
     }
   }
 
+  /// display as lisp
   pub fn to_lisp(&self) -> Result<String, String> {
     match self {
       Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {}", self)),
@@ -195,6 +196,14 @@ impl Cirru {
 
   pub fn leaf<T: Into<String>>(s: T) -> Self {
     Cirru::Leaf(s.into().into_boxed_str())
+  }
+
+  /// compare it with a reference to string
+  pub fn eq_leaf(&self, s: &str) -> bool {
+    match self {
+      Self::Leaf(l) => &**l == s,
+      _ => false,
+    }
   }
 }
 
