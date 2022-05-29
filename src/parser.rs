@@ -102,7 +102,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
   }
 }
 
-fn parse_indentation(size: usize) -> Result<CirruLexItem, String> {
+fn parse_indentation(size: u8) -> Result<CirruLexItem, String> {
   if size & 0x1 == 0x0 {
     // even number
     Ok(CirruLexItem::Indent(size >> 1))
@@ -240,13 +240,13 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           buffer = String::from("");
         }
         '"' => {
-          let level = parse_indentation(buffer.len())?;
+          let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           state = CirruLexState::Str;
           buffer = String::from("");
         }
         '(' => {
-          let level = parse_indentation(buffer.len())?;
+          let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
@@ -254,7 +254,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         }
         ')' => return Err(String::from("unexpected ) at line start")),
         _ => {
-          let level = parse_indentation(buffer.len())?;
+          let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           state = CirruLexState::Token;
           buffer = String::from(c);

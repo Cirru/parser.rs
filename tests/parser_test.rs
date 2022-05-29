@@ -1,43 +1,44 @@
 extern crate cirru_parser;
 
-#[cfg(feature = "use-serde")]
 mod json_test {
-  use std::fs;
-  use std::io;
 
-  use serde_json::json;
+  use cirru_parser::{parse, Cirru};
 
-  use cirru_parser::{from_json_str, from_json_value, parse, Cirru};
+  #[cfg(feature = "use-serde")]
+  use cirru_parser::from_json_str;
 
   #[test]
   fn parse_demo() {
-    assert_eq!(parse("a").map(Cirru::List), from_json_str(r#"[["a"]]"#));
+    assert_eq!(parse("a").map(Cirru::List), Ok(Cirru::List(vec!(vec!["a"].into()))));
 
-    assert_eq!(
-      parse("a b c").map(Cirru::List),
-      from_json_str(r#"[["a", "b", "c"]]"#)
-    );
+    assert_eq!(parse("a b c").map(Cirru::List), Ok(Cirru::List(vec!(vec!["a", "b", "c"].into()))));
 
     assert_eq!(
       parse("a\nb").map(Cirru::List),
-      from_json_str(r#"[["a"], ["b"]]"#)
+      Ok(Cirru::List(vec!(vec!["a"].into(), vec!["b"].into())))
     );
 
     assert_eq!(
       parse("a (b) c").map(Cirru::List),
-      Ok(from_json_value(json!([["a", ["b"], "c"]])))
+      Ok(Cirru::List(vec![vec![Cirru::leaf("a"), vec!["b"].into(), "c".into()].into()]))
     );
 
     assert_eq!(
       parse("a (b)\n  c").map(Cirru::List),
-      Ok(from_json_value(json!([["a", ["b"], ["c"]]])))
+      Ok(Cirru::List(vec!(vec![Cirru::leaf("a"), vec!["b"].into(), vec!["c"].into()].into())))
     );
 
-    assert_eq!(parse("").map(Cirru::List), from_json_str(r#"[]"#));
+    assert_eq!(parse("").map(Cirru::List), Ok((vec![] as Vec<Cirru>).into()));
   }
 
+  #[cfg(feature = "use-serde")]
+  use std::io;
+
+  #[cfg(feature = "use-serde")]
   #[test]
   fn parse_files() -> Result<(), io::Error> {
+    use std::fs;
+
     let files = vec![
       "comma",
       "demo",
@@ -58,6 +59,7 @@ mod json_test {
       println!("testing file: {}", file);
       let json_str = fs::read_to_string(format!("./tests/data/{}.json", file))?;
       let cirru_str = fs::read_to_string(format!("./tests/cirru/{}.cirru", file))?;
+
       assert_eq!(parse(&cirru_str).map(Cirru::List), from_json_str(&json_str));
     }
     Ok(())
