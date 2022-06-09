@@ -1,10 +1,8 @@
 use std::clone::Clone;
-use std::cmp::Ordering;
 use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::str;
 use std::sync::Arc;
-// use std::marker::Copy;
 
 #[cfg(feature = "use-serde")]
 use serde::{
@@ -16,7 +14,7 @@ use serde::{
 use crate::s_expr;
 
 /// Cirru uses nested Vecters and Strings as data structure
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Cirru {
   Leaf(Box<str>),
   List(Vec<Cirru>),
@@ -122,56 +120,9 @@ impl fmt::Display for Cirru {
   }
 }
 
-impl fmt::Debug for Cirru {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    // just use fn from Display
-    write!(f, "{}", self)
-  }
-}
-
-impl Eq for Cirru {}
-
-impl PartialEq for Cirru {
-  fn eq(&self, other: &Self) -> bool {
-    match (self, other) {
-      (Self::Leaf(a), Self::Leaf(b)) => a == b,
-      (Self::List(a), Self::List(b)) => a == b,
-      (_, _) => false,
-    }
-  }
-}
-
-impl Ord for Cirru {
-  fn cmp(&self, other: &Self) -> Ordering {
-    match (self, other) {
-      (Self::Leaf(a), Self::Leaf(b)) => a.cmp(b),
-      (Self::Leaf(_), Self::List(_)) => Ordering::Less,
-      (Self::List(_), Self::Leaf(_)) => Ordering::Greater,
-      (Self::List(a), Self::List(b)) => a.cmp(b),
-    }
-  }
-}
-
-impl PartialOrd for Cirru {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(other))
-  }
-}
-
-impl Hash for Cirru {
-  fn hash<H: Hasher>(&self, state: &mut H) {
-    match self {
-      Self::Leaf(s) => {
-        s.hash(state);
-      }
-      Self::List(xs) => {
-        xs.hash(state);
-      }
-    }
-  }
-}
-
 impl Cirru {
+  /// for leaf, returns string length
+  /// for list, returns list length
   pub fn len(&self) -> usize {
     match self {
       Self::Leaf(s) => s.len(),
@@ -179,6 +130,7 @@ impl Cirru {
     }
   }
 
+  /// empty leaf or empty list
   pub fn is_empty(&self) -> bool {
     match self {
       Self::Leaf(s) => s.len() == 0,
@@ -194,6 +146,7 @@ impl Cirru {
     }
   }
 
+  /// create a leaf node
   pub fn leaf<T: Into<String>>(s: T) -> Self {
     Cirru::Leaf(s.into().into_boxed_str())
   }
@@ -203,6 +156,33 @@ impl Cirru {
     match self {
       Self::Leaf(l) => &**l == s,
       _ => false,
+    }
+  }
+
+  /// check if it contains nested lists
+  /// `true` for `a (b)`
+  /// `false` for `a b c`
+  pub fn is_nested(&self) -> bool {
+    match self {
+      Cirru::Leaf(_) => false,
+      Cirru::List(xs) => {
+        for x in xs {
+          if let Cirru::List(ys) = x {
+            if !ys.is_empty() {
+              return true;
+            }
+          }
+        }
+        false
+      }
+    }
+  }
+
+  /// expression of `; a` or `;; a` are treated as comment
+  pub fn is_comment(&self) -> bool {
+    match self {
+      Cirru::List(_) => false,
+      Cirru::Leaf(s) => &(**s) == ";" || &(**s) == ";;",
     }
   }
 }
