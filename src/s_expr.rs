@@ -14,7 +14,7 @@ pub fn format_to_lisp(xs: &[Cirru]) -> Result<String, String> {
 pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
   match node {
     Cirru::List(xs) => {
-      if !xs.is_empty() && is_comment_mark(&xs[0]) {
+      if !xs.is_empty() && xs[0].is_comment() {
         let mut chunk: String = format!("{}{}", gen_newline(indent), ";;");
         for (idx, x) in xs.iter().enumerate() {
           if idx > 0 {
@@ -26,7 +26,7 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
       } else {
         let mut chunk = String::from("(");
         for (idx, x) in xs.iter().enumerate() {
-          if is_nested(x) {
+          if x.is_nested() {
             chunk = format!("{}{}", chunk.trim_end(), gen_newline(indent + 1));
           }
           let next = format_expr(x, indent + 1)?;
@@ -79,27 +79,4 @@ pub fn gen_newline(n: usize) -> String {
     chunk.push_str("  ");
   }
   chunk
-}
-
-pub fn is_nested(node: &Cirru) -> bool {
-  match node {
-    Cirru::Leaf(_) => false,
-    Cirru::List(xs) => {
-      for x in xs {
-        if let Cirru::List(ys) = x {
-          if !ys.is_empty() {
-            return true;
-          }
-        }
-      }
-      false
-    }
-  }
-}
-
-pub fn is_comment_mark(node: &Cirru) -> bool {
-  match node {
-    Cirru::List(_) => false,
-    Cirru::Leaf(s) => &(**s) == ";" || &(**s) == ";;",
-  }
 }
