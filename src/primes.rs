@@ -40,7 +40,7 @@ impl From<&String> for Cirru {
 
 impl From<Arc<str>> for Cirru {
   fn from(value: Arc<str>) -> Self {
-    Self::Leaf((&*value).into())
+    Self::Leaf((*value).into())
   }
 }
 
@@ -187,7 +187,7 @@ impl Cirru {
   }
 }
 
-#[derive(fmt::Debug, PartialEq)]
+#[derive(fmt::Debug, PartialEq, Eq)]
 pub enum CirruLexState {
   Space,
   Token,
