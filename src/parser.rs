@@ -216,6 +216,10 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           state = CirruLexState::Str;
           buffer.push('\n');
         }
+        'r' => {
+          state = CirruLexState::Str;
+          buffer.push('\r');
+        }
         'u' => {
           // not supporting, but don't panic
           let end = idx + 10;

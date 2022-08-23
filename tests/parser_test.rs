@@ -18,6 +18,8 @@ mod json_test {
       Ok(Cirru::List(vec!(vec!["a"].into(), vec!["b"].into())))
     );
 
+    assert_eq!(parse("a\rb").map(Cirru::List), Ok(Cirru::List(vec!(vec!["a\rb"].into()))));
+
     assert_eq!(
       parse("a (b) c").map(Cirru::List),
       Ok(Cirru::List(vec![vec![Cirru::leaf("a"), vec!["b"].into(), "c".into()].into()]))
