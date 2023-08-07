@@ -17,7 +17,7 @@ defn fib (n)
   "#,
   );
 
-  let large_demo = "/Users/chen/repo/calcit-lang/editor/compact.cirru";
+  let large_demo = "/Users/chenyong/repo/calcit-lang/editor/compact.cirru";
   // let large_demo = "/Users/chen/repo/calcit-lang/respo-calcit-workflow/js-out/program-ir.cirru";
   // let large_demo = "/Users/chen/repo/calcit-lang/calcit_runner.rs/js-out/program-ir.cirru";
   let content = fs::read_to_string(large_demo).unwrap();

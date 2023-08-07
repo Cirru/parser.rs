@@ -168,7 +168,7 @@ fn generate_tree(
     let at_tail = idx != 0 && !in_tail && prev_kind == WriterNode::Leaf && idx == xs.len() - 1;
 
     // println!("\nloop {:?} {:?}", prev_kind, kind);
-    // println!("cursor {:?}", cursor);
+    // println!("cursor {:?} {} {}", cursor, idx, insist_head);
     // println!("{:?}", result);
 
     let child: String = match cursor {
@@ -185,7 +185,13 @@ fn generate_tree(
         } else if idx == 0 && insist_head {
           generate_inline_expr(ys)
         } else if kind == WriterNode::Leaf {
-          generate_empty_expr() // special since empty expr is treated as leaf
+          if idx == 0 {
+            let mut ret = render_newline(level);
+            ret.push_str(&generate_empty_expr());
+            ret
+          } else {
+            generate_empty_expr() // special since empty expr is treated as leaf
+          }
         } else if kind == WriterNode::SimpleExpr {
           if prev_kind == WriterNode::Leaf {
             generate_inline_expr(ys)
@@ -195,13 +201,7 @@ fn generate_tree(
             ret
           } else {
             let mut ret = render_newline(next_level);
-            ret.push_str(&generate_tree(
-              ys,
-              child_insist_head,
-              options,
-              next_level,
-              false,
-            )?);
+            ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
             ret
           }
         } else if kind == WriterNode::Expr {
@@ -215,10 +215,7 @@ fn generate_tree(
           }
         } else if kind == WriterNode::BoxedExpr {
           let content = generate_tree(ys, child_insist_head, options, next_level, false)?;
-          if prev_kind == WriterNode::Nil
-            || prev_kind == WriterNode::Leaf
-            || prev_kind == WriterNode::SimpleExpr
-          {
+          if prev_kind == WriterNode::Nil || prev_kind == WriterNode::Leaf || prev_kind == WriterNode::SimpleExpr {
             content
           } else {
             let mut ret = render_newline(next_level);
@@ -231,8 +228,7 @@ fn generate_tree(
       }
     };
 
-    let bended = kind == WriterNode::Leaf
-      && (prev_kind == WriterNode::BoxedExpr || prev_kind == WriterNode::Expr);
+    let bended = kind == WriterNode::Leaf && (prev_kind == WriterNode::BoxedExpr || prev_kind == WriterNode::Expr);
 
     let chunk = if at_tail
       || (prev_kind == WriterNode::Leaf && kind == WriterNode::Leaf)

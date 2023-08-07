@@ -57,7 +57,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
   loop {
     let chunk = pull_token();
 
-    if chunk == None {
+    if chunk.is_none() {
       return Ok(acc);
     }
     match chunk.unwrap() {
@@ -67,7 +67,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
         let mut pointer_stack: Vec<Vec<Cirru>> = Vec::with_capacity(16);
         loop {
           let cursor = pull_token();
-          if cursor == None {
+          if cursor.is_none() {
             return Err(String::from("unexpected end of file"));
           }
           match cursor.unwrap() {

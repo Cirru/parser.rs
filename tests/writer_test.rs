@@ -60,6 +60,7 @@ mod json_write_test {
       "quote",
       "spaces",
       "unfolding",
+      "list-match",
     ];
     for file in files {
       println!("testing file: {}", file);

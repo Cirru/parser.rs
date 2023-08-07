@@ -56,6 +56,7 @@ mod json_test {
       "quote",
       "spaces",
       "unfolding",
+      "list-match",
     ];
     for file in files {
       println!("testing file: {}", file);
