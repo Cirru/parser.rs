@@ -1,3 +1,4 @@
+use bincode::{Decode, Encode};
 use std::clone::Clone;
 use std::fmt;
 use std::hash::Hash;
@@ -14,7 +15,7 @@ use serde::{
 use crate::s_expr;
 
 /// Cirru uses nested Vecters and Strings as data structure
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Decode, Encode)]
 pub enum Cirru {
   Leaf(Box<str>),
   List(Vec<Cirru>),
