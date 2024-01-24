@@ -1,9 +1,9 @@
 use bincode::{Decode, Encode};
-use std::clone::Clone;
 use std::fmt;
 use std::hash::Hash;
 use std::str;
 use std::sync::Arc;
+use std::{clone::Clone, rc::Rc};
 
 #[cfg(feature = "use-serde")]
 use serde::{
@@ -206,7 +206,7 @@ pub enum CirruLexItem {
   Close,
   // supposed to be enough with indentation of 255
   Indent(u8),
-  Str(String),
+  Str(Rc<str>),
 }
 
 impl From<&str> for CirruLexItem {

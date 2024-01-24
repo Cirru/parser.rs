@@ -6,3 +6,5 @@ wasm-example/node_modules/
 wasm-example/pkg/
 
 wasm-example/dist/
+
+/profile.json
