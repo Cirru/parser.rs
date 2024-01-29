@@ -112,18 +112,17 @@ fn generate_inline_expr(xs: &[Cirru]) -> String {
   result
 }
 
-fn render_spaces(n: usize) -> String {
-  let mut result = String::with_capacity(n * 2);
+/// by 2 spaces
+fn push_spaces(buf: &mut String, n: usize) {
   for _ in 0..n {
-    result.push_str("  ");
+    buf.push_str("  ");
   }
-  result
 }
 
 fn render_newline(n: usize) -> String {
   let mut ret = String::with_capacity(n * 2);
   ret.push('\n');
-  ret.push_str(&render_spaces(n));
+  push_spaces(&mut ret, n);
   ret
 }
 
