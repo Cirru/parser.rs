@@ -1,9 +1,9 @@
 use bincode::{Decode, Encode};
-use std::clone::Clone;
 use std::fmt;
 use std::hash::Hash;
 use std::str;
 use std::sync::Arc;
+use std::{clone::Clone, rc::Rc};
 
 #[cfg(feature = "use-serde")]
 use serde::{
@@ -17,7 +17,7 @@ use crate::s_expr;
 /// Cirru uses nested Vecters and Strings as data structure
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Decode, Encode)]
 pub enum Cirru {
-  Leaf(Box<str>),
+  Leaf(Arc<str>),
   List(Vec<Cirru>),
 }
 
@@ -148,8 +148,8 @@ impl Cirru {
   }
 
   /// create a leaf node
-  pub fn leaf<T: Into<String>>(s: T) -> Self {
-    Cirru::Leaf(s.into().into_boxed_str())
+  pub fn leaf<T: Into<Arc<str>>>(s: T) -> Self {
+    Cirru::Leaf(s.into())
   }
 
   /// compare it with a reference to string
@@ -206,7 +206,7 @@ pub enum CirruLexItem {
   Close,
   // supposed to be enough with indentation of 255
   Indent(u8),
-  Str(String),
+  Str(Rc<str>),
 }
 
 impl From<&str> for CirruLexItem {

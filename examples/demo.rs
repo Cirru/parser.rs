@@ -17,7 +17,7 @@ defn fib (n)
   "#,
   );
 
-  let large_demo = "/Users/chenyong/repo/calcit-lang/editor/compact.cirru";
+  let large_demo = "/Users/chenyong/repo/calcit-lang/editor/calcit.cirru";
   // let large_demo = "/Users/chen/repo/calcit-lang/respo-calcit-workflow/js-out/program-ir.cirru";
   // let large_demo = "/Users/chen/repo/calcit-lang/calcit_runner.rs/js-out/program-ir.cirru";
   let content = fs::read_to_string(large_demo).unwrap();
@@ -25,7 +25,8 @@ defn fib (n)
   match parse(&content) {
     Ok(v) => {
       let writer_options = CirruWriterOptions { use_inline: false };
-      println!("{}", format(&v, writer_options).unwrap());
+      let t = format(&v, writer_options).unwrap();
+      println!("{}", t.len());
     }
     Err(e) => println!("{:?}", e),
   }

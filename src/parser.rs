@@ -57,47 +57,45 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
   loop {
     let chunk = pull_token();
 
-    if chunk.is_none() {
-      return Ok(acc);
-    }
-    match chunk.unwrap() {
-      CirruLexItem::Open => {
-        let mut pointer: Vec<Cirru> = vec![];
-        // guess a nested level of 16
-        let mut pointer_stack: Vec<Vec<Cirru>> = Vec::with_capacity(16);
-        loop {
-          let cursor = pull_token();
-          if cursor.is_none() {
-            return Err(String::from("unexpected end of file"));
-          }
-          match cursor.unwrap() {
-            CirruLexItem::Close => {
-              if pointer_stack.is_empty() {
-                acc.push(Cirru::List(pointer.to_owned()));
-                break;
-              } else {
-                let v = pointer_stack.pop();
-                let prev_p = pointer;
-                match v {
-                  Some(collected) => {
-                    pointer = collected;
-                    pointer.push(Cirru::List(prev_p))
+    match &chunk {
+      None => return Ok(acc),
+      Some(ck) => {
+        match ck {
+          CirruLexItem::Open => {
+            let mut pointer: Vec<Cirru> = vec![];
+            // guess a nested level of 16
+            let mut pointer_stack: Vec<Vec<Cirru>> = Vec::with_capacity(16);
+            loop {
+              let cursor = pull_token();
+
+              match &cursor {
+                None => return Err(String::from("unexpected end of file")),
+                Some(c) => match c {
+                  CirruLexItem::Close => match pointer_stack.pop() {
+                    None => {
+                      acc.push(Cirru::List(pointer));
+                      break;
+                    }
+                    Some(v) => {
+                      let prev_p = pointer;
+                      pointer = v;
+                      pointer.push(Cirru::List(prev_p));
+                    }
+                  },
+                  CirruLexItem::Open => {
+                    pointer_stack.push(pointer);
+                    pointer = vec![];
                   }
-                  None => return Err(String::from("unknown close item")),
-                }
+                  CirruLexItem::Str(s) => pointer.push(Cirru::Leaf((**s).into())),
+                  CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
+                },
               }
             }
-            CirruLexItem::Open => {
-              pointer_stack.push(pointer);
-              pointer = vec![];
-            }
-            CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.as_str().into())),
-            CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
           }
+          CirruLexItem::Close => return Err(String::from("unexpected \")\"")),
+          a => return Err(format!("unknown item: {:?}", a)),
         }
       }
-      CirruLexItem::Close => return Err(String::from("unexpected \")\"")),
-      a => return Err(format!("unknown item: {:?}", a)),
     }
   }
 }
@@ -151,28 +149,28 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       },
       CirruLexState::Token => match c {
         ' ' => {
-          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Space;
           buffer = String::from("");
         }
         '"' => {
-          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Str;
           buffer = String::from("");
         }
         '\n' => {
-          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Indent;
           buffer = String::from("");
         }
         '(' => {
-          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Str(buffer.into()));
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
           buffer = String::from("")
         }
         ')' => {
-          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Str(buffer.into()));
           acc.push(CirruLexItem::Close);
           state = CirruLexState::Space;
           buffer = String::from("")
@@ -184,7 +182,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       },
       CirruLexState::Str => match c {
         '"' => {
-          acc.push(CirruLexItem::Str(buffer));
+          acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Space;
           buffer = String::from("");
         }
@@ -270,7 +268,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   match state {
     CirruLexState::Space => Ok(acc),
     CirruLexState::Token => {
-      acc.push(CirruLexItem::Str(buffer));
+      acc.push(CirruLexItem::Str(buffer.into()));
       Ok(acc)
     }
     CirruLexState::Escape => Err(String::from("unknown escape")),
