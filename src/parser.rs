@@ -149,28 +149,28 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       },
       CirruLexState::Token => match c {
         ' ' => {
-          acc.push(CirruLexItem::Str(buffer.into()));
+          acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Space;
           buffer = String::from("");
         }
         '"' => {
-          acc.push(CirruLexItem::Str(buffer.into()));
+          acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Str;
           buffer = String::from("");
         }
         '\n' => {
-          acc.push(CirruLexItem::Str(buffer.into()));
+          acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Indent;
           buffer = String::from("");
         }
         '(' => {
-          acc.push(CirruLexItem::Str(buffer.into()));
+          acc.push(CirruLexItem::Str(buffer));
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
           buffer = String::from("")
         }
         ')' => {
-          acc.push(CirruLexItem::Str(buffer.into()));
+          acc.push(CirruLexItem::Str(buffer));
           acc.push(CirruLexItem::Close);
           state = CirruLexState::Space;
           buffer = String::from("")
@@ -182,7 +182,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       },
       CirruLexState::Str => match c {
         '"' => {
-          acc.push(CirruLexItem::Str(buffer.into()));
+          acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Space;
           buffer = String::from("");
         }
@@ -268,7 +268,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   match state {
     CirruLexState::Space => Ok(acc),
     CirruLexState::Token => {
-      acc.push(CirruLexItem::Str(buffer.into()));
+      acc.push(CirruLexItem::Str(buffer));
       Ok(acc)
     }
     CirruLexState::Escape => Err(String::from("unknown escape")),

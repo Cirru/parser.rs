@@ -46,5 +46,5 @@ bench = true
 debug = true
 
 [[bench]]
-name = "formatting"
+name = "parsing"
 harness = false
