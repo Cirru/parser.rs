@@ -114,7 +114,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   // guessed an initial length
   let mut acc: CirruLexItemList = Vec::with_capacity(initial_code.len() >> 4);
   let mut state = CirruLexState::Indent;
-  let mut buffer = String::from("");
+  let mut buffer = String::with_capacity(8); // guessed
   let code = initial_code;
 
   for (idx, c) in code.chars().enumerate() {
@@ -286,58 +286,57 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
     if pointer >= tokens.len() {
       if acc.is_empty() {
         return vec![];
-      } else {
-        acc.insert(0, CirruLexItem::Open);
-        for _ in 0..level {
-          acc.push(CirruLexItem::Close);
-        }
-        acc.push(CirruLexItem::Close);
-        return acc;
       }
-    } else {
-      match &tokens[pointer] {
-        CirruLexItem::Str(s) => {
-          acc.push(CirruLexItem::Str(s.to_owned()));
+
+      acc.insert(0, CirruLexItem::Open);
+      for _ in 0..level {
+        acc.push(CirruLexItem::Close);
+      }
+      acc.push(CirruLexItem::Close);
+      return acc;
+    }
+    match &tokens[pointer] {
+      CirruLexItem::Str(s) => {
+        acc.push(CirruLexItem::Str(s.to_owned()));
+        pointer += 1;
+      }
+      CirruLexItem::Open => {
+        acc.push(CirruLexItem::Open);
+        pointer += 1;
+      }
+      CirruLexItem::Close => {
+        acc.push(CirruLexItem::Close);
+        pointer += 1;
+      }
+      CirruLexItem::Indent(n) => match n.cmp(&level) {
+        Greater => {
+          let delta = n - level;
+          for _ in 0..delta {
+            acc.push(CirruLexItem::Open);
+          }
           pointer += 1;
+          level = *n;
         }
-        CirruLexItem::Open => {
+        Less => {
+          let delta = level - n;
+          for _ in 0..delta {
+            acc.push(CirruLexItem::Close);
+          }
+          acc.push(CirruLexItem::Close);
           acc.push(CirruLexItem::Open);
           pointer += 1;
+          level = *n;
         }
-        CirruLexItem::Close => {
-          acc.push(CirruLexItem::Close);
-          pointer += 1;
-        }
-        CirruLexItem::Indent(n) => match n.cmp(&level) {
-          Greater => {
-            let delta = n - level;
-            for _ in 0..delta {
-              acc.push(CirruLexItem::Open);
-            }
-            pointer += 1;
-            level = *n;
-          }
-          Less => {
-            let delta = level - n;
-            for _ in 0..delta {
-              acc.push(CirruLexItem::Close);
-            }
+        Equal => {
+          if acc.is_empty() {
+            acc = vec![];
+          } else {
             acc.push(CirruLexItem::Close);
             acc.push(CirruLexItem::Open);
-            pointer += 1;
-            level = *n;
           }
-          Equal => {
-            if acc.is_empty() {
-              acc = vec![];
-            } else {
-              acc.push(CirruLexItem::Close);
-              acc.push(CirruLexItem::Open);
-            }
-            pointer += 1;
-          }
-        },
-      }
+          pointer += 1;
+        }
+      },
     }
   }
 }

@@ -27,12 +27,6 @@ impl From<&str> for Cirru {
   }
 }
 
-impl From<String> for Cirru {
-  fn from(value: String) -> Self {
-    Self::Leaf(value.as_str().into())
-  }
-}
-
 impl From<&String> for Cirru {
   fn from(value: &String) -> Self {
     Self::Leaf(value.as_str().into())
@@ -57,16 +51,6 @@ impl From<&[&str]> for Cirru {
 
 impl From<&[String]> for Cirru {
   fn from(value: &[String]) -> Self {
-    let mut xs: Vec<Cirru> = vec![];
-    for x in value {
-      xs.push(x.into());
-    }
-    Self::List(xs)
-  }
-}
-
-impl From<Vec<String>> for Cirru {
-  fn from(value: Vec<String>) -> Self {
     let mut xs: Vec<Cirru> = vec![];
     for x in value {
       xs.push(x.into());
