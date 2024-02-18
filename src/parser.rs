@@ -114,7 +114,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   // guessed an initial length
   let mut acc: CirruLexItemList = Vec::with_capacity(initial_code.len() >> 4);
   let mut state = CirruLexState::Indent;
-  let mut buffer = String::with_capacity(8); // guessed
+  let mut buffer = String::new();
   let code = initial_code;
 
   for (idx, c) in code.chars().enumerate() {
@@ -122,25 +122,25 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       CirruLexState::Space => match c {
         ' ' => {
           state = CirruLexState::Space;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '\n' => {
           state = CirruLexState::Indent;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '(' => {
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
-          buffer = String::from("")
+          buffer = String::new()
         }
         ')' => {
           acc.push(CirruLexItem::Close);
           state = CirruLexState::Space;
-          buffer = String::from("")
+          buffer = String::new()
         }
         '"' => {
           state = CirruLexState::Str;
-          buffer = String::from("");
+          buffer = String::new();
         }
         _ => {
           state = CirruLexState::Token;
@@ -151,29 +151,29 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         ' ' => {
           acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Space;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '"' => {
           acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Str;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '\n' => {
           acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Indent;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '(' => {
           acc.push(CirruLexItem::Str(buffer));
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
-          buffer = String::from("")
+          buffer = String::new()
         }
         ')' => {
           acc.push(CirruLexItem::Str(buffer));
           acc.push(CirruLexItem::Close);
           state = CirruLexState::Space;
-          buffer = String::from("")
+          buffer = String::new()
         }
         _ => {
           state = CirruLexState::Token;
@@ -184,7 +184,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         '"' => {
           acc.push(CirruLexItem::Str(buffer));
           state = CirruLexState::Space;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '\\' => {
           state = CirruLexState::Escape;
@@ -239,20 +239,20 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         }
         '\n' => {
           state = CirruLexState::Indent;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '"' => {
           let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           state = CirruLexState::Str;
-          buffer = String::from("");
+          buffer = String::new();
         }
         '(' => {
           let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
-          buffer = String::from("");
+          buffer = String::new();
         }
         ')' => return Err(String::from("unexpected ) at line start")),
         _ => {
@@ -279,11 +279,12 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
 
 /// internal function for figuring out indentations after lexing
 pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
-  let mut acc: CirruLexItemList = Vec::with_capacity(tokens.len() >> 1);
+  let size = tokens.len();
+  let mut acc: CirruLexItemList = Vec::new();
   let mut level = 0;
   let mut pointer = 0;
   loop {
-    if pointer >= tokens.len() {
+    if pointer >= size {
       if acc.is_empty() {
         return vec![];
       }
