@@ -1,9 +1,9 @@
 use bincode::{Decode, Encode};
+use std::clone::Clone;
 use std::fmt;
 use std::hash::Hash;
 use std::str;
 use std::sync::Arc;
-use std::{clone::Clone, rc::Rc};
 
 #[cfg(feature = "use-serde")]
 use serde::{
@@ -27,18 +27,6 @@ impl From<&str> for Cirru {
   }
 }
 
-impl From<String> for Cirru {
-  fn from(value: String) -> Self {
-    Self::Leaf(value.as_str().into())
-  }
-}
-
-impl From<&String> for Cirru {
-  fn from(value: &String) -> Self {
-    Self::Leaf(value.as_str().into())
-  }
-}
-
 impl From<Arc<str>> for Cirru {
   fn from(value: Arc<str>) -> Self {
     Self::Leaf((*value).into())
@@ -50,26 +38,6 @@ impl From<&[&str]> for Cirru {
     let mut xs: Vec<Cirru> = vec![];
     for x in value {
       xs.push((*x).into());
-    }
-    Self::List(xs)
-  }
-}
-
-impl From<&[String]> for Cirru {
-  fn from(value: &[String]) -> Self {
-    let mut xs: Vec<Cirru> = vec![];
-    for x in value {
-      xs.push(x.into());
-    }
-    Self::List(xs)
-  }
-}
-
-impl From<Vec<String>> for Cirru {
-  fn from(value: Vec<String>) -> Self {
-    let mut xs: Vec<Cirru> = vec![];
-    for x in value {
-      xs.push(x.into());
     }
     Self::List(xs)
   }
@@ -206,7 +174,7 @@ pub enum CirruLexItem {
   Close,
   // supposed to be enough with indentation of 255
   Indent(u8),
-  Str(Rc<str>),
+  Str(String),
 }
 
 impl From<&str> for CirruLexItem {

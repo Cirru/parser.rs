@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.1.28"
+version = "0.1.29"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -42,8 +42,8 @@ test = true
 doctest = true
 bench = true
 
-# [profile.release]
-# debug = true
+[profile.release]
+debug = true
 
 [[bench]]
 name = "parsing"
