@@ -1,6 +1,6 @@
 [package]
 name = "cirru_parser"
-version = "0.1.29"
+version = "0.1.30"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -28,12 +28,12 @@ use-serde = ["serde", "serde_json"]
 
 # ['cfg(features = "use-serde")'.dependencies]
 [dependencies]
-serde = { version = "1.0.147", optional = true }
-serde_json = { version = "1.0.87", optional = true }
+serde = { version = "1.0.202", optional = true }
+serde_json = { version = "1.0.117", optional = true }
 bincode = "2.0.0-rc.3"
 
 [dev-dependencies]
-criterion = "0.4.0"
+criterion = "0.5.1"
 
 [lib]
 name = "cirru_parser"
