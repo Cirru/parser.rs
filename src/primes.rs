@@ -27,6 +27,18 @@ impl From<&str> for Cirru {
   }
 }
 
+impl From<String> for Cirru {
+  fn from(value: String) -> Self {
+    Self::Leaf(Arc::from(value))
+  }
+}
+
+impl From<&String> for Cirru {
+  fn from(value: &String) -> Self {
+    Self::Leaf(Arc::from(value.to_owned()))
+  }
+}
+
 impl From<Arc<str>> for Cirru {
   fn from(value: Arc<str>) -> Self {
     Self::Leaf((*value).into())
