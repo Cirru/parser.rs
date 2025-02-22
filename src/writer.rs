@@ -108,7 +108,7 @@ fn generate_inline_expr(xs: &[Cirru]) -> String {
     result.push_str(&piece)
   }
 
-  result.push_str(&CHAR_CLOSE.to_string());
+  result.push(CHAR_CLOSE);
   result
 }
 

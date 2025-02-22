@@ -2,7 +2,7 @@
 name = "cirru_parser"
 version = "0.1.31"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "Parser for Cirru text syntax"
 homepage = "http://cirru.org"
@@ -17,7 +17,7 @@ exclude = [
   "src/main.rs",
   "/wasm-example",
   "examples/",
-  ".github/"
+  ".github/",
 ]
 
 

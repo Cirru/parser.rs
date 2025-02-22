@@ -8,3 +8,5 @@ wasm-example/pkg/
 wasm-example/dist/
 
 /profile.json
+
+.DS_Store

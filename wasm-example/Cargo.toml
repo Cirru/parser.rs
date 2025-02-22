@@ -1,13 +1,14 @@
+
 [package]
 name = "wasm-example"
 version = "0.1.0"
-edition = "2018"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 cirru_parser = { path = "../" }
-wasm-bindgen = "0.2.80"
+wasm-bindgen = "0.2.88"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
