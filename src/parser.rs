@@ -34,6 +34,8 @@ mod json;
 #[cfg(feature = "use-serde")]
 pub use json::*;
 
+const DEFAULT_EXPR_CAPACITY: usize = 8; // Added for default capacity
+
 use std::cmp::Ordering::*;
 
 use primes::CirruLexState;
@@ -44,7 +46,7 @@ pub use s_expr::format_to_lisp;
 pub use writer::{format, CirruWriterOptions};
 
 fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
-  let mut acc: Vec<Cirru> = vec![];
+  let mut acc: Vec<Cirru> = Vec::with_capacity(tokens.len() / 6 + 1); // MODIFIED
   let mut idx = 0;
   let mut pull_token = || {
     if idx >= tokens.len() {
@@ -62,7 +64,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
     }
     match chunk.unwrap() {
       CirruLexItem::Open => {
-        let mut pointer: Vec<Cirru> = vec![];
+        let mut pointer: Vec<Cirru> = Vec::with_capacity(DEFAULT_EXPR_CAPACITY); // MODIFIED
         // guess a nested level of 16
         let mut pointer_stack: Vec<Vec<Cirru>> = Vec::with_capacity(16);
         loop {
@@ -73,7 +75,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
           match cursor.unwrap() {
             CirruLexItem::Close => {
               if pointer_stack.is_empty() {
-                acc.push(Cirru::List(pointer.to_owned()));
+                acc.push(Cirru::List(pointer)); // MODIFIED (removed .to_owned())
                 break;
               } else {
                 let v = pointer_stack.pop();
@@ -89,7 +91,7 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
             }
             CirruLexItem::Open => {
               pointer_stack.push(pointer);
-              pointer = vec![];
+              pointer = Vec::with_capacity(DEFAULT_EXPR_CAPACITY); // MODIFIED
             }
             CirruLexItem::Str(s) => pointer.push(Cirru::Leaf(s.clone())),
             CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
@@ -113,10 +115,11 @@ fn parse_indentation(size: u8) -> Result<CirruLexItem, String> {
 
 /// internal function for lexing
 pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
+  const DEFAULT_BUFFER_CAPACITY: usize = 32;
   // guessed an initial length
   let mut acc: CirruLexItemList = Vec::with_capacity(initial_code.len() >> 4);
   let mut state = CirruLexState::Indent;
-  let mut buffer = String::new();
+  let mut buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
   let code = initial_code;
 
   for (idx, c) in code.chars().enumerate() {
@@ -124,58 +127,59 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       CirruLexState::Space => match c {
         ' ' => {
           state = CirruLexState::Space;
-          buffer = String::new();
+          buffer.clear(); // MODIFIED
         }
         '\n' => {
           state = CirruLexState::Indent;
-          buffer = String::new();
+          buffer.clear(); // MODIFIED
         }
         '(' => {
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
-          buffer = String::new()
+          buffer.clear(); // MODIFIED
         }
         ')' => {
           acc.push(CirruLexItem::Close);
           state = CirruLexState::Space;
-          buffer = String::new()
+          buffer.clear(); // MODIFIED
         }
         '"' => {
           state = CirruLexState::Str;
-          buffer = String::new();
+          buffer.clear(); // MODIFIED
         }
         _ => {
           state = CirruLexState::Token;
-          buffer = String::from(c)
+          buffer.clear(); // MODIFIED
+          buffer.push(c); // MODIFIED
         }
       },
       CirruLexState::Token => match c {
         ' ' => {
           acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Space;
-          buffer = String::new();
+          buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
         }
         '"' => {
           acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Str;
-          buffer = String::new();
+          buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
         }
         '\n' => {
           acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Indent;
-          buffer = String::new();
+          buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
         }
         '(' => {
           acc.push(CirruLexItem::Str(buffer.into()));
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
-          buffer = String::new()
+          buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
         }
         ')' => {
           acc.push(CirruLexItem::Str(buffer.into()));
           acc.push(CirruLexItem::Close);
           state = CirruLexState::Space;
-          buffer = String::new()
+          buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
         }
         _ => {
           state = CirruLexState::Token;
@@ -186,7 +190,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         '"' => {
           acc.push(CirruLexItem::Str(buffer.into()));
           state = CirruLexState::Space;
-          buffer = String::new();
+          buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY); // MODIFIED
         }
         '\\' => {
           state = CirruLexState::Escape;
@@ -241,27 +245,28 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         }
         '\n' => {
           state = CirruLexState::Indent;
-          buffer = String::new();
+          buffer.clear(); // MODIFIED
         }
         '"' => {
           let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           state = CirruLexState::Str;
-          buffer = String::new();
+          buffer.clear(); // MODIFIED
         }
         '(' => {
           let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
-          buffer = String::new();
+          buffer.clear(); // MODIFIED
         }
         ')' => return Err(String::from("unexpected ) at line start")),
         _ => {
           let level = parse_indentation(buffer.len() as u8)?;
           acc.push(level);
           state = CirruLexState::Token;
-          buffer = String::from(c);
+          buffer.clear(); // MODIFIED
+          buffer.push(c); // MODIFIED
         }
       },
     }
@@ -287,14 +292,17 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
   loop {
     if pointer >= tokens.len() {
       if acc.is_empty() {
-        return vec![];
+        return vec![]; // MODIFIED for consistency, though CirruLexItemList::new() is also fine
       } else {
-        acc.insert(0, CirruLexItem::Open);
+        // MODIFIED: More efficient way to wrap acc
+        let mut new_acc = Vec::with_capacity(1 + acc.len() + level as usize + 1);
+        new_acc.push(CirruLexItem::Open);
+        new_acc.append(&mut acc); // acc is drained
         for _ in 0..level {
-          acc.push(CirruLexItem::Close);
+          new_acc.push(CirruLexItem::Close);
         }
-        acc.push(CirruLexItem::Close);
-        return acc;
+        new_acc.push(CirruLexItem::Close);
+        return new_acc;
       }
     } else {
       match &tokens[pointer] {

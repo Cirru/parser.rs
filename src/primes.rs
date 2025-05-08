@@ -349,7 +349,7 @@ impl Encode for Cirru {
     match self {
       Cirru::Leaf(s) => {
         0u8.encode(encoder)?;
-        s.to_string().encode(encoder)
+        s.as_ref().encode(encoder)
       }
       Cirru::List(vec) => {
         1u8.encode(encoder)?;
