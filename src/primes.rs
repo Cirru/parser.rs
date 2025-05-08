@@ -1,4 +1,5 @@
 use bincode::{Decode, Encode};
+use std::borrow::Cow;
 use std::clone::Clone;
 use std::fmt;
 use std::hash::Hash;
@@ -15,33 +16,33 @@ use serde::{
 use crate::s_expr;
 
 /// Cirru uses nested Vecters and Strings as data structure
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Decode, Encode)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Cirru {
-  Leaf(Box<str>),
+  Leaf(Cow<'static, str>),
   List(Vec<Cirru>),
 }
 
 impl From<&str> for Cirru {
   fn from(value: &str) -> Self {
-    Self::Leaf(value.into())
+    Self::Leaf(Cow::Owned(value.to_string()))
   }
 }
 
 impl From<String> for Cirru {
   fn from(value: String) -> Self {
-    Self::Leaf(value.as_str().into())
+    Self::Leaf(Cow::Owned(value))
   }
 }
 
 impl From<&String> for Cirru {
   fn from(value: &String) -> Self {
-    Self::Leaf(value.as_str().into())
+    Self::Leaf(Cow::Owned(value.to_string()))
   }
 }
 
 impl From<Arc<str>> for Cirru {
   fn from(value: Arc<str>) -> Self {
-    Self::Leaf((*value).into())
+    Self::Leaf(Cow::Owned(value.to_string()))
   }
 }
 
@@ -148,8 +149,8 @@ impl Cirru {
   }
 
   /// create a leaf node
-  pub fn leaf<T: Into<String>>(s: T) -> Self {
-    Cirru::Leaf(s.into().into_boxed_str())
+  pub fn leaf<T: Into<Cow<'static, str>>>(s: T) -> Self {
+    Cirru::Leaf(s.into())
   }
 
   /// compare it with a reference to string
@@ -206,12 +207,12 @@ pub enum CirruLexItem {
   Close,
   // supposed to be enough with indentation of 255
   Indent(u8),
-  Str(String),
+  Str(Cow<'static, str>),
 }
 
 impl From<&str> for CirruLexItem {
   fn from(value: &str) -> Self {
-    Self::Str(value.into())
+    Self::Str(Cow::Owned(value.to_string()))
   }
 }
 
@@ -222,7 +223,7 @@ impl From<u8> for CirruLexItem {
 }
 
 impl CirruLexItem {
-  fn is_normal_str(tok: &str) -> bool {
+  pub fn is_normal_str(tok: &str) -> bool {
     for s in tok.chars() {
       if !matches!(s, 'A'..='Z' | 'a'..='z'|'0'..='9' | '-' | '?' |'!'|'+'|'*'|'$'|'@'|'#'|'%'|'&'|'_'|'='|'|'|':'|'.'|'<'|'>') {
         return false;
@@ -242,12 +243,18 @@ pub type CirruLexItemList = Vec<CirruLexItem>;
 /// escape_cirru_leaf("a"); // "\"a\""
 /// escape_cirru_leaf("a b"); // "\"a b\""
 /// ```
-pub fn escape_cirru_leaf(s: &str) -> String {
-  let mut chunk = String::with_capacity(s.len() + 1);
-  chunk.push('\"');
+pub fn escape_cirru_leaf(s: &str) -> Cow<'static, str> {
   if CirruLexItem::is_normal_str(s) {
+    // 如果是普通字符串，创建一个带引号的版本
+    let mut chunk = String::with_capacity(s.len() + 2);
+    chunk.push('\"');
     chunk.push_str(s);
+    chunk.push('\"');
+    Cow::Owned(chunk)
   } else {
+    // 只有在需要转义的情况下才创建新的字符串
+    let mut chunk = String::with_capacity(s.len() + 2);
+    chunk.push('\"');
     for c in s.chars() {
       match c {
         '\n' => chunk.push_str("\\n"),
@@ -258,9 +265,9 @@ pub fn escape_cirru_leaf(s: &str) -> String {
         _ => chunk.push(c),
       }
     }
+    chunk.push('\"');
+    Cow::Owned(chunk)
   }
-  chunk.push('"');
-  chunk
 }
 
 #[cfg(feature = "use-serde")]
@@ -317,5 +324,37 @@ impl<'de> Deserialize<'de> for Cirru {
     D: Deserializer<'de>,
   {
     deserializer.deserialize_any(CirruVisitor {})
+  }
+}
+
+impl Decode for Cirru {
+    fn decode<D: bincode::de::Decoder>(decoder: &mut D) -> Result<Self, bincode::error::DecodeError> {
+        let tag: u8 = Decode::decode(decoder)?;
+        match tag {
+            0 => {
+                let s: String = Decode::decode(decoder)?;
+                Ok(Cirru::Leaf(Cow::Owned(s)))
+            }
+            1 => {
+                let vec: Vec<Cirru> = Decode::decode(decoder)?;
+                Ok(Cirru::List(vec))
+            }
+            _ => Err(bincode::error::DecodeError::OtherString(String::from("Invalid tag"))),
+        }
+    }
+}
+
+impl Encode for Cirru {
+  fn encode<E: bincode::enc::Encoder>(&self, encoder: &mut E) -> Result<(), bincode::error::EncodeError> {
+    match self {
+      Cirru::Leaf(s) => {
+        0u8.encode(encoder)?;
+        s.to_string().encode(encoder)
+      }
+      Cirru::List(vec) => {
+        1u8.encode(encoder)?;
+        vec.encode(encoder)
+      }
+    }
   }
 }

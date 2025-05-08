@@ -1,4 +1,5 @@
-use crate::primes::Cirru;
+use crate::primes::{Cirru, CirruLexItem};
+use std::borrow::Cow;
 use std::fmt;
 use std::str;
 
@@ -62,31 +63,29 @@ fn is_char_allowed(x: char) -> bool {
   ALLOWED_CHARS.find(x).is_some()
 }
 
-fn generate_leaf(s: &str) -> String {
-  let mut all_allowed = true;
-  for x in s.chars() {
-    if !is_char_allowed(x) {
-      all_allowed = false;
-      break;
+fn escape_cirru_leaf(s: &str) -> Cow<'static, str> {
+  // 需要转义的情况下创建一个新字符串
+  let mut ret = String::with_capacity(s.len() + 2);
+  ret.push('"');
+  for c in s.chars() {
+    match c {
+      '\n' => ret.push_str("\\n"),
+      '\t' => ret.push_str("\\t"),
+      '\"' => ret.push_str("\\\""),
+      '\\' => ret.push_str("\\\\"),
+      '\'' => ret.push_str("\\'"),
+      _ => ret.push(c),
     }
   }
-  if all_allowed {
-    s.to_string()
+  ret.push('"');
+  Cow::Owned(ret)
+}
+
+fn generate_leaf(s: &str) -> Cow<'static, str> {
+  if CirruLexItem::is_normal_str(s) {
+    Cow::Owned(s.to_string())
   } else {
-    let mut ret = String::with_capacity(s.len() + 2);
-    ret.push('"');
-    for c in s.chars() {
-      match c {
-        '\n' => ret.push_str("\\n"),
-        '\t' => ret.push_str("\\t"),
-        '\"' => ret.push_str("\\\""),
-        '\\' => ret.push_str("\\\\"),
-        '\'' => ret.push_str("\\'"),
-        _ => ret.push(c),
-      }
-    }
-    ret.push('"');
-    ret
+    escape_cirru_leaf(s)
   }
 }
 
@@ -94,7 +93,7 @@ fn generate_empty_expr() -> String {
   String::from("()")
 }
 
-fn generate_inline_expr(xs: &[Cirru]) -> String {
+fn generate_inline_expr(xs: &[Cirru]) -> Cow<'static, str> {
   let mut result = String::from(CHAR_OPEN);
 
   for (idx, x) in xs.iter().enumerate() {
@@ -102,14 +101,14 @@ fn generate_inline_expr(xs: &[Cirru]) -> String {
       result.push(' ');
     }
     let piece = match x {
-      Cirru::Leaf(s) => generate_leaf(s),
-      Cirru::List(ys) => generate_inline_expr(ys),
+      Cirru::Leaf(s) => generate_leaf(s).into_owned(),
+      Cirru::List(ys) => generate_inline_expr(ys).into_owned(),
     };
     result.push_str(&piece)
   }
 
   result.push_str(&CHAR_CLOSE.to_string());
-  result
+  Cow::Owned(result)
 }
 
 fn render_spaces(n: usize) -> String {
@@ -172,7 +171,7 @@ fn generate_tree(
     // println!("{:?}", result);
 
     let child: String = match cursor {
-      Cirru::Leaf(s) => generate_leaf(s),
+      Cirru::Leaf(s) => generate_leaf(s).into_owned(),
       Cirru::List(ys) => {
         if at_tail {
           if ys.is_empty() {
@@ -183,7 +182,7 @@ fn generate_tree(
             ret
           }
         } else if idx == 0 && insist_head {
-          generate_inline_expr(ys)
+          generate_inline_expr(ys).into_owned()
         } else if kind == WriterNode::Leaf {
           if idx == 0 {
             let mut ret = render_newline(level);
@@ -194,7 +193,7 @@ fn generate_tree(
           }
         } else if kind == WriterNode::SimpleExpr {
           if prev_kind == WriterNode::Leaf {
-            generate_inline_expr(ys)
+            generate_inline_expr(ys).into_owned()
           } else if options.use_inline && prev_kind == WriterNode::SimpleExpr {
             let mut ret = String::from(" ");
             ret.push_str(&generate_inline_expr(ys));
