@@ -1,6 +1,9 @@
+cargo-features = ["edition2024"]
+
+
 [package]
 name = "cirru_parser"
-version = "0.1.31"
+version = "0.1.32"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2024"
 license = "MIT"
