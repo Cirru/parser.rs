@@ -31,9 +31,9 @@ use-serde = ["serde", "serde_json"]
 
 # ['cfg(features = "use-serde")'.dependencies]
 [dependencies]
-serde = { version = "1.0.202", optional = true }
-serde_json = { version = "1.0.117", optional = true }
-bincode = "2.0.0-rc.3"
+serde = { version = "1.0.219", optional = true }
+serde_json = { version = "1.0.140", optional = true }
+bincode = "2.0.1"
 
 [dev-dependencies]
 criterion = "0.5.1"
