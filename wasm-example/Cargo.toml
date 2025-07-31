@@ -8,7 +8,7 @@ edition = "2024"
 
 [dependencies]
 cirru_parser = { path = "../" }
-wasm-bindgen = "0.2.88"
+wasm-bindgen = "0.2.100"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

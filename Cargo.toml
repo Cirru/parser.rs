@@ -1,9 +1,7 @@
-cargo-features = ["edition2024"]
-
 
 [package]
 name = "cirru_parser"
-version = "0.1.32"
+version = "0.1.33"
 authors = ["jiyinyiyong <jiyinyiyong@gmail.com>"]
 edition = "2024"
 license = "MIT"
@@ -32,7 +30,7 @@ use-serde = ["serde", "serde_json"]
 # ['cfg(features = "use-serde")'.dependencies]
 [dependencies]
 serde = { version = "1.0.219", optional = true }
-serde_json = { version = "1.0.140", optional = true }
+serde_json = { version = "1.0.141", optional = true }
 bincode = "2.0.1"
 
 [dev-dependencies]

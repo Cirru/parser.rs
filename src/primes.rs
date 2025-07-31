@@ -82,7 +82,7 @@ impl fmt::Display for Cirru {
     match self {
       Cirru::Leaf(a) => {
         if CirruLexItem::is_normal_str(a) {
-          write!(f, "{}", a)
+          write!(f, "{a}")
         } else {
           write!(f, "{}", escape_cirru_leaf(a))
         }
@@ -93,7 +93,7 @@ impl fmt::Display for Cirru {
           if idx > 0 {
             write!(f, " ")?;
           }
-          write!(f, "{}", x)?;
+          write!(f, "{x}")?;
         }
         write!(f, ")")
       }
@@ -122,7 +122,7 @@ impl Cirru {
   /// display as lisp
   pub fn to_lisp(&self) -> Result<String, String> {
     match self {
-      Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {}", self)),
+      Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {self}")),
       Cirru::List(xs) => s_expr::format_to_lisp(xs),
     }
   }

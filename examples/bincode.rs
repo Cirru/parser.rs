@@ -16,7 +16,7 @@ fn main() -> Result<(), String> {
   let (decoded, _length): (Vec<Cirru>, usize) = bincode::decode_from_slice(&buf[..], bincode::config::standard()).unwrap();
 
   let writer_options = CirruWriterOptions { use_inline: true };
-  println!("wrote to {}", bin_out);
+  println!("wrote to {bin_out}");
 
   println!("{}", format(&decoded, writer_options).unwrap());
 

@@ -28,7 +28,7 @@ defn fib (n)
       let t = format(&v, writer_options).unwrap();
       println!("{}", t.len());
     }
-    Err(e) => println!("{:?}", e),
+    Err(e) => println!("{e:?}"),
   }
 
   // println!(
