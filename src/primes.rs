@@ -5,11 +5,10 @@ use std::hash::Hash;
 use std::str;
 use std::sync::Arc;
 
-#[cfg(feature = "use-serde")]
 use serde::{
+  Deserialize, Deserializer, Serialize, Serializer,
   de::{SeqAccess, Visitor},
   ser::SerializeSeq,
-  Deserialize, Deserializer, Serialize, Serializer,
 };
 
 use crate::s_expr;
@@ -243,7 +242,6 @@ pub fn escape_cirru_leaf(s: &str) -> String {
   chunk
 }
 
-#[cfg(feature = "use-serde")]
 impl Serialize for Cirru {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -262,10 +260,8 @@ impl Serialize for Cirru {
   }
 }
 
-#[cfg(feature = "use-serde")]
 struct CirruVisitor {}
 
-#[cfg(feature = "use-serde")]
 impl<'de> Visitor<'de> for CirruVisitor {
   type Value = Cirru;
 
@@ -290,7 +286,6 @@ impl<'de> Visitor<'de> for CirruVisitor {
   }
 }
 
-#[cfg(feature = "use-serde")]
 impl<'de> Deserialize<'de> for Cirru {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
   where

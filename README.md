@@ -90,13 +90,41 @@ assert_eq!(escaped, "\"a b\"");
 
 ## Features
 
-- `use-serde`: Enables serialization and deserialization of the `Cirru` tree structure using `serde`.
+This crate provides the following features:
 
-To enable this feature, add it to your `Cargo.toml`:
+**Default features:**
+
+- **serde**: The `Cirru` type implements `Serialize` and `Deserialize` traits by default, allowing integration with any serde-compatible serialization format (bincode, MessagePack, etc.).
+
+**Optional features:**
+
+- **serde-json**: Provides JSON conversion utilities (`from_json_str`, `to_json_str`, etc.) for converting between Cirru structures and JSON.
+
+To use JSON conversion features, add them to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cirru_parser = { version = "0.1.33", features = ["use-serde"] }
+cirru_parser = { version = "0.1.33", features = ["serde-json"] }
+```
+
+### Examples
+
+```rust
+use cirru_parser::Cirru;
+
+// Basic usage (always available)
+let data = Cirru::leaf("hello");
+
+// Serde serialization (always available)
+use serde_json;
+let json = serde_json::to_string(&data).unwrap();
+
+// JSON conversion (requires "serde-json" feature)
+#[cfg(feature = "serde-json")]
+{
+    use cirru_parser::from_json_str;
+    let cirru = from_json_str(r#"["a", ["b", "c"]]"#).unwrap();
+}
 ```
 
 ## Development

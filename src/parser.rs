@@ -28,10 +28,10 @@ mod s_expr;
 mod tree;
 mod writer;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 mod json;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 pub use json::*;
 
 const DEFAULT_EXPR_CAPACITY: usize = 8; // Added for default capacity
