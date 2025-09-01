@@ -31,22 +31,22 @@ fn try_hash() {
   let mut hasher = DefaultHasher::new();
   Cirru::leaf("a").hash(&mut hasher);
   let a = hasher.finish();
-  println!("{:x}", a);
+  println!("{a:x}");
 
   let mut hasher = DefaultHasher::new();
   Cirru::leaf("a").hash(&mut hasher);
   let b = hasher.finish();
-  println!("{:x}", b);
+  println!("{b:x}");
 
   let mut hasher = DefaultHasher::new();
   Cirru::List(vec![Cirru::leaf("a")]).hash(&mut hasher);
   let c = hasher.finish();
-  println!("{:x}", c);
+  println!("{c:x}");
 
   let mut hasher = DefaultHasher::new();
   Cirru::List(vec![Cirru::leaf("a")]).hash(&mut hasher);
   let d = hasher.finish();
-  println!("{:x}", d);
+  println!("{d:x}");
 
   assert_eq!(a, b);
   assert_ne!(a, c);

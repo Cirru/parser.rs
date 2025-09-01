@@ -1,7 +1,7 @@
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 use std::{fs, io};
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 fn main() -> Result<(), io::Error> {
   use cirru_parser::{format, Cirru, CirruWriterOptions};
   // use std::collections::hash_map::DefaultHasher;
@@ -32,7 +32,7 @@ fn main() -> Result<(), io::Error> {
   Ok(())
 }
 
-#[cfg(not(feature = "use-serde"))]
+#[cfg(not(feature = "serde-json"))]
 fn main() {
-  println!("this example requires feature `use-serde`");
+  println!("this example requires feature `serde-json`");
 }

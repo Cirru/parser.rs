@@ -28,10 +28,10 @@ mod s_expr;
 mod tree;
 mod writer;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 mod json;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 pub use json::*;
 
 const DEFAULT_EXPR_CAPACITY: usize = 8; // Added for default capacity
@@ -45,6 +45,7 @@ pub use primes::{Cirru, CirruLexItem, CirruLexItemList, escape_cirru_leaf};
 pub use s_expr::format_to_lisp;
 pub use writer::{CirruWriterOptions, format};
 
+/// builds a tree from a flat list of tokens
 fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
   let mut acc: Vec<Cirru> = Vec::with_capacity(tokens.len() / 6 + 1);
   let mut idx = 0;
@@ -89,13 +90,13 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
                     pointer = Vec::with_capacity(DEFAULT_EXPR_CAPACITY);
                   }
                   CirruLexItem::Str(s) => pointer.push(Cirru::Leaf((**s).into())),
-                  CirruLexItem::Indent(n) => return Err(format!("unknown indent: {}", n)),
+                  CirruLexItem::Indent(n) => return Err(format!("unknown indent: {n}")),
                 },
               }
             }
           }
           CirruLexItem::Close => return Err(String::from("unexpected \")\"")),
-          a => return Err(format!("unknown item: {:?}", a)),
+          a => return Err(format!("unknown item: {a:?}")),
         }
       }
     }
@@ -107,13 +108,15 @@ fn parse_indentation(size: u8) -> Result<CirruLexItem, String> {
     // even number
     Ok(CirruLexItem::Indent(size >> 1))
   } else {
-    Err(format!("odd indentation size, {}", size))
+    Err(format!("odd indentation size, {size}"))
   }
 }
 
 const DEFAULT_BUFFER_CAPACITY: usize = 8;
 
-/// internal function for lexing
+/// The lexer for Cirru syntax. It scans the code and returns a flat list of tokens.
+/// It uses a state machine to handle different parts of the syntax, such as strings,
+/// tokens, and indentation.
 pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   // guessed an initial length
   let mut acc: CirruLexItemList = Vec::with_capacity(initial_code.len() >> 4);
@@ -121,7 +124,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   let mut buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY);
   let code = initial_code;
 
-  for (idx, c) in code.chars().enumerate() {
+  for (idx, c) in code.char_indices() {
     match state {
       CirruLexState::Space => match c {
         ' ' => {
@@ -227,7 +230,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           // not supporting, but don't panic
           let end = idx + 10;
           let peek = if end >= code.len() { &code[idx..] } else { &code[idx..end] };
-          println!("Unicode escaping is not supported yet: {:?} ...", peek);
+          println!("Unicode escaping is not supported yet: {peek:?} ...");
           buffer.push_str("\\u");
           state = CirruLexState::Str;
         }
@@ -235,7 +238,7 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           state = CirruLexState::Str;
           buffer.push('\\');
         }
-        _ => return Err(format!("unexpected character during string escaping: {:?}", c)),
+        _ => return Err(format!("unexpected character during string escaping: {c:?}")),
       },
       CirruLexState::Indent => match c {
         ' ' => {
@@ -283,88 +286,123 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
   }
 }
 
-/// internal function for figuring out indentations after lexing
+/// This function transforms a flat list of tokens into a tree structure
+/// by handling indentation. It inserts `Open` and `Close` tokens based on
+/// changes in indentation levels.
+///
+/// # Examples
+///
+/// ```
+/// # use cirru_parser::{CirruLexItem, resolve_indentations};
+/// # use cirru_parser::CirruLexItem::*;
+/// let tokens = vec![Indent(0), "a".into(), Indent(1), "b".into()];
+/// let resolved = resolve_indentations(&tokens);
+/// assert_eq!(resolved, vec![Open, "a".into(), Open, "b".into(), Close, Close]);
+/// ```
 pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
-  let size = tokens.len();
-  let mut acc: CirruLexItemList = Vec::new();
-  let mut level = 0;
-  let mut pointer = 0;
-  loop {
-    if pointer >= size {
-      if acc.is_empty() {
-        return vec![];
-      }
+  let mut acc: CirruLexItemList = Vec::with_capacity(tokens.len() * 2);
+  let mut level: u8 = 0;
 
-      // More efficient way to wrap acc
-      let mut new_acc = Vec::with_capacity(1 + acc.len() + level as usize + 1);
-      new_acc.push(CirruLexItem::Open);
-      new_acc.append(&mut acc); // acc is drained
+  if tokens.is_empty() {
+    return vec![];
+  }
 
-      for _ in 0..level {
-        new_acc.push(CirruLexItem::Close);
-      }
-      new_acc.push(CirruLexItem::Close);
-      return new_acc;
-    }
-    match &tokens[pointer] {
+  for token in tokens {
+    match token {
       CirruLexItem::Str(s) => {
         acc.push(CirruLexItem::Str(s.to_owned()));
-        pointer += 1;
       }
       CirruLexItem::Open => {
         acc.push(CirruLexItem::Open);
-        pointer += 1;
       }
       CirruLexItem::Close => {
         acc.push(CirruLexItem::Close);
-        pointer += 1;
       }
-      CirruLexItem::Indent(n) => match n.cmp(&level) {
-        Greater => {
-          let delta = n - level;
-          for _ in 0..delta {
-            acc.push(CirruLexItem::Open);
+      CirruLexItem::Indent(n) => {
+        match n.cmp(&level) {
+          Greater => {
+            // Indent level increased, push open parenthesis.
+            for _ in 0..(n - level) {
+              acc.push(CirruLexItem::Open);
+            }
           }
-          pointer += 1;
-          level = *n;
-        }
-        Less => {
-          let delta = level - n;
-          for _ in 0..delta {
-            acc.push(CirruLexItem::Close);
-          }
-          acc.push(CirruLexItem::Close);
-          acc.push(CirruLexItem::Open);
-          pointer += 1;
-          level = *n;
-        }
-        Equal => {
-          if acc.is_empty() {
-            acc = vec![];
-          } else {
+          Less => {
+            // Indent level decreased, push close parenthesis.
+            for _ in 0..(level - n) {
+              acc.push(CirruLexItem::Close);
+            }
             acc.push(CirruLexItem::Close);
             acc.push(CirruLexItem::Open);
           }
-          pointer += 1;
+          Equal => {
+            // Same indent level, close previous expression and start a new one.
+            if !acc.is_empty() {
+              acc.push(CirruLexItem::Close);
+              acc.push(CirruLexItem::Open);
+            }
+          }
         }
-      },
+        level = *n;
+      }
     }
+  }
+
+  // Close all remaining parenthesis.
+  if !acc.is_empty() {
+    let mut new_acc = Vec::with_capacity(1 + acc.len() + level as usize + 1);
+    new_acc.push(CirruLexItem::Open);
+    new_acc.append(&mut acc); // acc is drained
+
+    for _ in 0..level {
+      new_acc.push(CirruLexItem::Close);
+    }
+    new_acc.push(CirruLexItem::Close);
+    new_acc
+  } else {
+    vec![]
   }
 }
 
-/// parse function, parse String to Cirru.
+/// Parses a string of Cirru code into a tree of `Cirru` expressions.
 ///
-/// ```rust
-/// cirru_parser::parse("def a 1");
+/// This is the main entry point for the parser. It performs the following steps:
+/// 1. Lexing: The code is tokenized into a flat list of `CirruLexItem`s.
+/// 2. Indentation Resolution: The flat list of tokens is transformed into a tree
+///    structure by handling indentation.
+/// 3. Tree Building: The token tree is converted into a tree of `Cirru` expressions.
+/// 4. Syntax Resolution: Special syntax like `$` and `,` is resolved.
+///
+/// # Examples
+///
+/// ```
+/// # use cirru_parser::{parse, Cirru};
+/// let code = "defn main\n  println \"Hello, world!\"";
+/// let expected = Ok(vec![
+///   Cirru::List(vec![
+///     Cirru::Leaf("defn".into()),
+///     Cirru::Leaf("main".into()),
+///     Cirru::List(vec![
+///       Cirru::Leaf("println".into()),
+///       Cirru::Leaf("Hello, world!".into()),
+///     ]),
+///   ]),
+/// ]);
+/// assert_eq!(parse(code), expected);
 /// ```
 pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   let tokens = resolve_indentations(&lex(code)?);
   // println!("{:?}", tokens);
-  let tree = build_exprs(&tokens)?;
+  let mut tree = build_exprs(&tokens)?;
   // println!("tree {:?}", tree);
-  Ok(resolve_comma(&resolve_dollar(&tree)))
+  resolve_dollar(&mut tree);
+  resolve_comma(&mut tree);
+  Ok(tree)
 }
 
+/// Converts a string of Cirru code directly to a Lisp-like string.
+///
+/// This function is a convenience wrapper around `parse` and `format_to_lisp`.
+/// It will panic if parsing or formatting fails.
 pub fn cirru_to_lisp(code: &str) -> String {
   match parse(code) {
     Ok(tree) => match format_to_lisp(&tree) {

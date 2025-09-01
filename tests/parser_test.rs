@@ -4,7 +4,7 @@ mod json_test {
 
   use cirru_parser::{parse, Cirru};
 
-  #[cfg(feature = "use-serde")]
+  #[cfg(feature = "serde-json")]
   use cirru_parser::from_json_str;
 
   #[test]
@@ -33,10 +33,10 @@ mod json_test {
     assert_eq!(parse("").map(Cirru::List), Ok((vec![] as Vec<Cirru>).into()));
   }
 
-  #[cfg(feature = "use-serde")]
+  #[cfg(feature = "serde-json")]
   use std::io;
 
-  #[cfg(feature = "use-serde")]
+  #[cfg(feature = "serde-json")]
   #[test]
   fn parse_files() -> Result<(), io::Error> {
     use std::fs;

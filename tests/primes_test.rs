@@ -17,11 +17,11 @@ fn test_eq() {
 #[test]
 fn test_fmt() {
   let a = Cirru::leaf("na");
-  assert_eq!(format!("{}", a), "na");
+  assert_eq!(format!("{a}"), "na");
 
   let b = a.to_owned();
   let c = Cirru::List(vec![a, b]);
-  assert_eq!(format!("{}", c), "(na na)")
+  assert_eq!(format!("{c}"), "(na na)")
 }
 
 #[test]

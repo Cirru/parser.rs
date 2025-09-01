@@ -16,7 +16,8 @@ jobs:
           toolchain: nightly
           components: clippy
 
-      - run: cargo test --features "use-serde"
+      - run: cargo test
+      - run: cargo test --features "serde-json"
 
       - uses: jetli/wasm-pack-action@v0.3.0
         with:

@@ -2,11 +2,11 @@ extern crate cirru_parser;
 
 use cirru_parser::escape_cirru_leaf;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde-json")]
 mod json_write_test {
   use super::*;
 
-  use cirru_parser::{format, from_json_str, Cirru, CirruWriterOptions};
+  use cirru_parser::{Cirru, CirruWriterOptions, format, from_json_str};
   use std::fs;
   use std::io;
 

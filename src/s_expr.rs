@@ -18,7 +18,7 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
         let mut chunk: String = format!("{}{}", gen_newline(indent), ";;");
         for (idx, x) in xs.iter().enumerate() {
           if idx > 0 {
-            chunk = format!("{} {}", chunk, x);
+            chunk = format!("{chunk} {x}");
           }
         }
         chunk = format!("{}{}", chunk.trim_end(), gen_newline(indent));
@@ -33,14 +33,14 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
           if next.starts_with('\n') {
             chunk = format!("{}{}", chunk.trim_end(), next);
           } else {
-            chunk = format!("{}{}", chunk, next);
+            chunk = format!("{chunk}{next}");
           }
           // TODO dirty way, but intuitive for now
           if idx < xs.len() - 1 && !ends_with_newline(&chunk) {
-            chunk = format!("{} ", chunk);
+            chunk = format!("{chunk} ");
           }
         }
-        Ok(format!("{})", chunk))
+        Ok(format!("{chunk})"))
       }
     }
     Cirru::Leaf(token) => {
@@ -51,7 +51,7 @@ pub fn format_expr(node: &Cirru, indent: usize) -> Result<String, String> {
         if s0 == '|' || s0 == '"' {
           Ok(format!("\"{}\"", token[1..].escape_default()))
         } else if token.contains(' ') || token.contains('\n') || token.contains('\"') {
-          Err(format!("bad token content: {}", token))
+          Err(format!("bad token content: {token}"))
         } else {
           Ok((**token).to_string())
         }

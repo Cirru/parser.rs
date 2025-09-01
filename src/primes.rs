@@ -5,11 +5,10 @@ use std::hash::Hash;
 use std::str;
 use std::sync::Arc;
 
-#[cfg(feature = "use-serde")]
 use serde::{
+  Deserialize, Deserializer, Serialize, Serializer,
   de::{SeqAccess, Visitor},
   ser::SerializeSeq,
-  Deserialize, Deserializer, Serialize, Serializer,
 };
 
 use crate::s_expr;
@@ -82,7 +81,7 @@ impl fmt::Display for Cirru {
     match self {
       Cirru::Leaf(a) => {
         if CirruLexItem::is_normal_str(a) {
-          write!(f, "{}", a)
+          write!(f, "{a}")
         } else {
           write!(f, "{}", escape_cirru_leaf(a))
         }
@@ -93,7 +92,7 @@ impl fmt::Display for Cirru {
           if idx > 0 {
             write!(f, " ")?;
           }
-          write!(f, "{}", x)?;
+          write!(f, "{x}")?;
         }
         write!(f, ")")
       }
@@ -122,7 +121,7 @@ impl Cirru {
   /// display as lisp
   pub fn to_lisp(&self) -> Result<String, String> {
     match self {
-      Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {}", self)),
+      Cirru::Leaf(_) => Err(format!("expected list to convert to Lisp, got {self}")),
       Cirru::List(xs) => s_expr::format_to_lisp(xs),
     }
   }
@@ -243,7 +242,6 @@ pub fn escape_cirru_leaf(s: &str) -> String {
   chunk
 }
 
-#[cfg(feature = "use-serde")]
 impl Serialize for Cirru {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -262,10 +260,8 @@ impl Serialize for Cirru {
   }
 }
 
-#[cfg(feature = "use-serde")]
 struct CirruVisitor {}
 
-#[cfg(feature = "use-serde")]
 impl<'de> Visitor<'de> for CirruVisitor {
   type Value = Cirru;
 
@@ -290,7 +286,6 @@ impl<'de> Visitor<'de> for CirruVisitor {
   }
 }
 
-#[cfg(feature = "use-serde")]
 impl<'de> Deserialize<'de> for Cirru {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
   where
