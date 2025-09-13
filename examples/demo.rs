@@ -1,4 +1,4 @@
-use cirru_parser::{format, parse, CirruWriterOptions};
+use cirru_parser::{CirruWriterOptions, format, parse};
 // use std::collections::hash_map::DefaultHasher;
 use std::fs;
 // use std::hash::{Hash, Hasher};

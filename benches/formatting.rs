@@ -1,7 +1,7 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::fs;
 
-use cirru_parser::{format, parse, CirruWriterOptions};
+use cirru_parser::{CirruWriterOptions, format, parse};
 
 fn criterion_benchmark(c: &mut Criterion) {
   let large_demo = "/Users/chenyong/repo/calcit-lang/editor/compact.cirru";

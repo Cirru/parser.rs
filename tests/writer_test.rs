@@ -122,3 +122,35 @@ fn leaves_escapeing() {
   assert_eq!("\"中文\"", escape_cirru_leaf("中文"));
   assert_eq!("\"中文\\n\"", escape_cirru_leaf("中文\n"));
 }
+
+#[test]
+fn test_writer_options_from_bool() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
+
+  // 直接构造测试数据，不依赖 JSON
+  // 创建一个包含多个嵌套列表的结构，这样 inline 模式会有明显差异
+  let xs = vec![Cirru::List(vec![
+    Cirru::leaf("a"),
+    Cirru::List(vec![Cirru::leaf("c"), Cirru::leaf("b")]),
+    Cirru::List(vec![Cirru::leaf("d"), Cirru::leaf("e")]),
+    Cirru::List(vec![Cirru::leaf("g"), Cirru::leaf("h")]),
+  ])];
+
+  // 测试从 bool 转换为 CirruWriterOptions 并用于 format
+  let inline_result = format(&xs, true.into())?;
+  let non_inline_result = format(&xs, false.into())?;
+
+  // 验证 inline 和 non-inline 模式产生不同的输出
+  assert_ne!(inline_result, non_inline_result);
+  assert!(non_inline_result.contains("\n"));
+
+  // 测试使用 From::from 方法
+  let inline_from_result = format(&xs, CirruWriterOptions::from(true))?;
+  let non_inline_from_result = format(&xs, CirruWriterOptions::from(false))?;
+
+  // 验证结果一致性
+  assert_eq!(inline_result, inline_from_result);
+  assert_eq!(non_inline_result, non_inline_from_result);
+
+  Ok(())
+}

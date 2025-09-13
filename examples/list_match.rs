@@ -3,7 +3,7 @@ use std::{fs, io};
 
 #[cfg(feature = "serde-json")]
 fn main() -> Result<(), io::Error> {
-  use cirru_parser::{format, Cirru, CirruWriterOptions};
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
   // use std::collections::hash_map::DefaultHasher;
   use cirru_parser::from_json_str;
 

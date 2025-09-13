@@ -7,7 +7,7 @@ fn main() {
 
   // 基础功能（总是可用）
   let data = Cirru::leaf("hello");
-  println!("✓ Basic Cirru functionality: {}", data);
+  println!("✓ Basic Cirru functionality: {data}");
 
   // Serde 序列化（默认启用）
   let serialized = bincode::encode_to_vec(&data, bincode::config::standard()).unwrap();

@@ -1,7 +1,7 @@
 extern crate cirru_parser;
 
-use cirru_parser::lex;
 use cirru_parser::CirruLexItem;
+use cirru_parser::lex;
 
 #[test]
 fn lexer() -> Result<(), String> {
