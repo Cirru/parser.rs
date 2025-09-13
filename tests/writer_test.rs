@@ -127,8 +127,8 @@ fn leaves_escapeing() {
 fn test_writer_options_from_bool() -> Result<(), String> {
   use cirru_parser::{Cirru, CirruWriterOptions, format};
 
-  // 直接构造测试数据，不依赖 JSON
-  // 创建一个包含多个嵌套列表的结构，这样 inline 模式会有明显差异
+  // Directly construct test data, not dependent on JSON
+  // Create a structure with multiple nested lists so that inline mode has obvious differences
   let xs = vec![Cirru::List(vec![
     Cirru::leaf("a"),
     Cirru::List(vec![Cirru::leaf("c"), Cirru::leaf("b")]),
