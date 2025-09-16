@@ -1,6 +1,6 @@
 extern crate cirru_parser;
 
-use cirru_parser::{parse, Cirru};
+use cirru_parser::{Cirru, parse};
 
 #[test]
 fn format_tests() -> Result<(), String> {

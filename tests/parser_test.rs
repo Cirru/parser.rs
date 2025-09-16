@@ -2,7 +2,7 @@ extern crate cirru_parser;
 
 mod json_test {
 
-  use cirru_parser::{parse, Cirru};
+  use cirru_parser::{Cirru, parse};
 
   #[cfg(feature = "serde-json")]
   use cirru_parser::from_json_str;

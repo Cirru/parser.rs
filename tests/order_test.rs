@@ -8,20 +8,13 @@ use std::hash::{Hash, Hasher};
 fn nodes_order() {
   assert_eq!(Cirru::leaf("a"), Cirru::leaf("a"));
 
-  assert_eq!(
-    Cirru::List(vec![Cirru::leaf("a")]),
-    Cirru::List(vec![Cirru::leaf("a")])
-  );
+  assert_eq!(Cirru::List(vec![Cirru::leaf("a")]), Cirru::List(vec![Cirru::leaf("a")]));
 
   assert!(Cirru::leaf("a") < Cirru::leaf("b"));
 
-  assert!(
-    Cirru::List(vec![Cirru::leaf("a")]) < Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("a")])
-  );
+  assert!(Cirru::List(vec![Cirru::leaf("a")]) < Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("a")]));
 
-  assert!(
-    Cirru::List(vec![Cirru::leaf("b")]) > Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("a")])
-  );
+  assert!(Cirru::List(vec![Cirru::leaf("b")]) > Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("a")]));
 
   assert!(Cirru::List(vec![Cirru::leaf("a")]) >= Cirru::leaf("b"));
 }

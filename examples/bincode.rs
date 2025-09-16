@@ -1,4 +1,4 @@
-use cirru_parser::{format, parse, Cirru, CirruWriterOptions};
+use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
 use std::fs;
 
 fn main() -> Result<(), String> {

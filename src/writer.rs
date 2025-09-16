@@ -132,6 +132,12 @@ pub struct CirruWriterOptions {
   pub use_inline: bool,
 }
 
+impl From<bool> for CirruWriterOptions {
+  fn from(use_inline: bool) -> Self {
+    CirruWriterOptions { use_inline }
+  }
+}
+
 fn get_node_kind(cursor: &Cirru) -> WriterNode {
   match cursor {
     Cirru::Leaf(_) => WriterNode::Leaf,

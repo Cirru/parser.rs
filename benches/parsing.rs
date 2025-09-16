@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::fs;
 use std::path::Path;
 
@@ -16,7 +16,6 @@ fn criterion_benchmark(c: &mut Criterion) {
   } else {
     println!("Failed to read large demo file, skipping benchmark.");
   }
-
 
   // benchmarks for smaller test files
   let paths: Vec<String> = fs::read_dir(Path::new("tests/cirru"))
