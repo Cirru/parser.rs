@@ -43,7 +43,7 @@ use tree::{resolve_comma, resolve_dollar};
 
 pub use primes::{Cirru, CirruLexItem, CirruLexItemList, escape_cirru_leaf};
 pub use s_expr::format_to_lisp;
-pub use writer::{CirruWriterOptions, format};
+pub use writer::{CirruWriterOptions, format, format_expr_oneliner};
 
 /// builds a tree from a flat list of tokens
 fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
@@ -397,6 +397,18 @@ pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   resolve_dollar(&mut tree);
   resolve_comma(&mut tree);
   Ok(tree)
+}
+
+/// Parses a one-line Cirru expression into exactly one `Cirru` expression.
+///
+/// This is a convenience wrapper over `parse` that enforces there is exactly one
+/// top-level expression.
+pub fn parse_expr_oneliner(code: &str) -> Result<Cirru, String> {
+  let xs = parse(code)?;
+  if xs.len() != 1 {
+    return Err(String::from("parse_expr_oneliner expects exactly 1 top-level expr"));
+  }
+  Ok(xs.into_iter().next().expect("len checked"))
 }
 
 /// Converts a string of Cirru code directly to a Lisp-like string.
