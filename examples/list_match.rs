@@ -10,9 +10,9 @@ fn main() -> Result<(), io::Error> {
   let files = vec!["list-match"];
 
   for file in files {
-    println!("testing file: {}", file);
-    let json_str = fs::read_to_string(format!("./tests/writer_data/{}.json", file))?;
-    let cirru_str = fs::read_to_string(format!("./tests/writer_cirru/{}.cirru", file))?;
+    println!("testing file: {file}");
+    let json_str = fs::read_to_string(format!("./tests/writer_data/{file}.json"))?;
+    let cirru_str = fs::read_to_string(format!("./tests/writer_cirru/{file}.cirru"))?;
 
     let writer_options = CirruWriterOptions { use_inline: false };
     match from_json_str(&json_str) {
@@ -24,7 +24,7 @@ fn main() -> Result<(), io::Error> {
         }
       }
       Err(e) => {
-        println!("{:?}", e);
+        println!("{e:?}");
         panic!("failed to load edn data from json");
       }
     }

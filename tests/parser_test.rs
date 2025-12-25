@@ -11,14 +11,20 @@ mod json_test {
   fn parse_demo() {
     assert_eq!(parse("a").map(Cirru::List), Ok(Cirru::List(vec!(vec!["a"].into()))));
 
-    assert_eq!(parse("a b c").map(Cirru::List), Ok(Cirru::List(vec!(vec!["a", "b", "c"].into()))));
+    assert_eq!(
+      parse("a b c").map(Cirru::List),
+      Ok(Cirru::List(vec!(vec!["a", "b", "c"].into())))
+    );
 
     assert_eq!(
       parse("a\nb").map(Cirru::List),
       Ok(Cirru::List(vec!(vec!["a"].into(), vec!["b"].into())))
     );
 
-    assert_eq!(parse("a\rb").map(Cirru::List), Ok(Cirru::List(vec!(vec!["a\rb"].into()))));
+    assert_eq!(
+      parse("a\rb").map(Cirru::List),
+      Ok(Cirru::List(vec!(vec!["a\rb"].into())))
+    );
 
     assert_eq!(
       parse("a (b) c").map(Cirru::List),
@@ -59,11 +65,14 @@ mod json_test {
       "list-match",
     ];
     for file in files {
-      println!("testing file: {}", file);
-      let json_str = fs::read_to_string(format!("./tests/data/{}.json", file))?;
-      let cirru_str = fs::read_to_string(format!("./tests/cirru/{}.cirru", file))?;
+      println!("testing file: {file}");
+      let json_str = fs::read_to_string(format!("./tests/data/{file}.json"))?;
+      let cirru_str = fs::read_to_string(format!("./tests/cirru/{file}.cirru"))?;
 
-      assert_eq!(parse(&cirru_str).map(Cirru::List), from_json_str(&json_str));
+      assert_eq!(
+        parse(&cirru_str).map(|r| Cirru::List(r)).map_err(|e| e.to_string()),
+        from_json_str(&json_str)
+      );
     }
     Ok(())
   }

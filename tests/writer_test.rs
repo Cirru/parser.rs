@@ -23,7 +23,7 @@ mod json_write_test {
         }
       }
       Err(e) => {
-        println!("file err: {}", e);
+        println!("file err: {e}");
         panic!("failed to load edn data from JSON");
       }
     };
@@ -63,9 +63,9 @@ mod json_write_test {
       "list-match",
     ];
     for file in files {
-      println!("testing file: {}", file);
-      let json_str = fs::read_to_string(format!("./tests/writer_data/{}.json", file))?;
-      let cirru_str = fs::read_to_string(format!("./tests/writer_cirru/{}.cirru", file))?;
+      println!("testing file: {file}");
+      let json_str = fs::read_to_string(format!("./tests/writer_data/{file}.json"))?;
+      let cirru_str = fs::read_to_string(format!("./tests/writer_cirru/{file}.cirru"))?;
 
       let writer_options = CirruWriterOptions { use_inline: false };
       match from_json_str(&json_str) {
@@ -77,7 +77,7 @@ mod json_write_test {
           }
         }
         Err(e) => {
-          println!("{:?}", e);
+          println!("{e:?}");
           panic!("failed to load edn data from json");
         }
       }
@@ -89,9 +89,9 @@ mod json_write_test {
   fn write_with_inline() -> Result<(), io::Error> {
     let files = vec!["html-inline", "inline-mode"];
     for file in files {
-      println!("testing file: {}", file);
-      let json_str = fs::read_to_string(format!("./tests/writer_data/{}.json", file))?;
-      let cirru_str = fs::read_to_string(format!("./tests/writer_cirru/{}.cirru", file))?;
+      println!("testing file: {file}");
+      let json_str = fs::read_to_string(format!("./tests/writer_data/{file}.json"))?;
+      let cirru_str = fs::read_to_string(format!("./tests/writer_cirru/{file}.cirru"))?;
 
       let writer_options = CirruWriterOptions { use_inline: true };
       match from_json_str(&json_str) {
@@ -103,7 +103,7 @@ mod json_write_test {
           }
         }
         Err(e) => {
-          println!("file err: {:?}", e);
+          println!("file err: {e:?}");
           panic!("failed to load edn form data");
         }
       }

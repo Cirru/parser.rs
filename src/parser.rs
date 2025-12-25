@@ -23,6 +23,7 @@ parses to:
 find more on <http://text.cirru.org/> .
 */
 
+mod error;
 mod primes;
 mod s_expr;
 mod tree;
@@ -30,6 +31,8 @@ mod writer;
 
 #[cfg(feature = "serde-json")]
 mod json;
+
+pub use error::{CirruError, CirruErrorKind, ErrorContext, SourcePos};
 
 #[cfg(feature = "serde-json")]
 pub use json::*;
@@ -45,6 +48,11 @@ pub use primes::{Cirru, CirruLexItem, CirruLexItemList, escape_cirru_leaf};
 pub use s_expr::format_to_lisp;
 pub use writer::{CirruOneLinerExt, CirruWriterOptions, format, format_expr_one_liner};
 
+/// Helper function to format and print a detailed error
+pub fn print_error(error: &CirruError, source_code: Option<&str>) {
+  eprintln!("{}", error.format_detailed(source_code));
+}
+
 /// Extension trait for method-style parsing of a one-line Cirru expression.
 pub trait CirruOneLinerParseExt {
   fn parse_expr_one_liner(&self) -> Result<Cirru, String>;
@@ -52,12 +60,12 @@ pub trait CirruOneLinerParseExt {
 
 impl CirruOneLinerParseExt for str {
   fn parse_expr_one_liner(&self) -> Result<Cirru, String> {
-    parse_expr_one_liner(self)
+    parse_expr_one_liner(self).map_err(|e| e.to_string())
   }
 }
 
 /// builds a tree from a flat list of tokens
-fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
+fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, CirruError> {
   let mut acc: Vec<Cirru> = Vec::with_capacity(tokens.len() / 6 + 1);
   let mut idx = 0;
   let mut pull_token = || {
@@ -83,7 +91,9 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
               let cursor = pull_token();
 
               match &cursor {
-                None => return Err(String::from("unexpected end of file")),
+                None => {
+                  return Err(CirruError::new(CirruErrorKind::UnexpectedEof));
+                }
                 Some(c) => match c {
                   CirruLexItem::Close => match pointer_stack.pop() {
                     None => {
@@ -101,41 +111,91 @@ fn build_exprs(tokens: &[CirruLexItem]) -> Result<Vec<Cirru>, String> {
                     pointer = Vec::with_capacity(DEFAULT_EXPR_CAPACITY);
                   }
                   CirruLexItem::Str(s) => pointer.push(Cirru::Leaf((**s).into())),
-                  CirruLexItem::Indent(n) => return Err(format!("unknown indent: {n}")),
+                  CirruLexItem::Indent(n) => {
+                    return Err(CirruError::new(CirruErrorKind::Other(format!("unknown indent: {n}"))));
+                  }
                 },
               }
             }
           }
-          CirruLexItem::Close => return Err(String::from("unexpected \")\"")),
-          a => return Err(format!("unknown item: {a:?}")),
+          CirruLexItem::Close => {
+            return Err(CirruError::new(CirruErrorKind::UnexpectedCloseParen));
+          }
+          a => {
+            return Err(CirruError::new(CirruErrorKind::Other(format!("unknown item: {a:?}"))));
+          }
         }
       }
     }
   }
 }
 
-fn parse_indentation(size: u8) -> Result<CirruLexItem, String> {
+fn parse_indentation(size: u8, ctx: &LexerContext, code: &str) -> Result<CirruLexItem, CirruError> {
   if size & 0x1 == 0x0 {
     // even number
     Ok(CirruLexItem::Indent(size >> 1))
   } else {
-    Err(format!("odd indentation size, {size}"))
+    let pos = ctx.current_pos();
+    let snippet = ctx.get_context_snippet(code, 20);
+    let error_ctx = ErrorContext::new(pos, Some(snippet), "checking indentation".to_string());
+    Err(CirruError::with_context(CirruErrorKind::InvalidIndentation(size), error_ctx))
   }
 }
 
 const DEFAULT_BUFFER_CAPACITY: usize = 8;
 
+/// Position tracker for lexical analysis
+struct LexerContext {
+  line: usize,
+  column: usize,
+  offset: usize,
+}
+
+impl LexerContext {
+  fn new() -> Self {
+    Self {
+      line: 1,
+      column: 1,
+      offset: 0,
+    }
+  }
+
+  fn current_pos(&self) -> SourcePos {
+    SourcePos::new(self.line, self.column, self.offset)
+  }
+
+  fn advance(&mut self, c: char) {
+    self.offset += c.len_utf8();
+    if c == '\n' {
+      self.line += 1;
+      self.column = 1;
+    } else {
+      self.column += 1;
+    }
+  }
+
+  fn get_context_snippet(&self, code: &str, window: usize) -> String {
+    let start = self.offset.saturating_sub(window);
+    let end = (self.offset + window).min(code.len());
+    let snippet = &code[start..end];
+    // Use escape_debug to show special characters like \n, \t, spaces clearly
+    let escaped: String = snippet.chars().take(60).flat_map(|c| c.escape_debug()).collect();
+    format!("...{escaped}...")
+  }
+}
+
 /// The lexer for Cirru syntax. It scans the code and returns a flat list of tokens.
 /// It uses a state machine to handle different parts of the syntax, such as strings,
 /// tokens, and indentation.
-pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
+pub fn lex(initial_code: &str) -> Result<CirruLexItemList, CirruError> {
   // guessed an initial length
   let mut acc: CirruLexItemList = Vec::with_capacity(initial_code.len() >> 4);
   let mut state = CirruLexState::Indent;
   let mut buffer = String::with_capacity(DEFAULT_BUFFER_CAPACITY);
   let code = initial_code;
+  let mut ctx = LexerContext::new();
 
-  for (idx, c) in code.char_indices() {
+  for (_idx, c) in code.char_indices() {
     match state {
       CirruLexState::Space => match c {
         ' ' => {
@@ -209,7 +269,10 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           state = CirruLexState::Escape;
         }
         '\n' => {
-          return Err(String::from("unexpected newline in string"));
+          let pos = ctx.current_pos();
+          let snippet = ctx.get_context_snippet(code, 20);
+          let error_ctx = ErrorContext::new(pos, Some(snippet), "in string literal".to_string());
+          return Err(CirruError::with_context(CirruErrorKind::UnexpectedNewlineInString, error_ctx));
         }
         _ => {
           state = CirruLexState::Str;
@@ -238,18 +301,25 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           buffer.push('\r');
         }
         'u' => {
-          // not supporting, but don't panic
-          let end = idx + 10;
-          let peek = if end >= code.len() { &code[idx..] } else { &code[idx..end] };
-          println!("Unicode escaping is not supported yet: {peek:?} ...");
-          buffer.push_str("\\u");
-          state = CirruLexState::Str;
+          // Unicode escaping: not fully supported
+          let pos = ctx.current_pos();
+          let snippet = ctx.get_context_snippet(code, 20);
+          let error_ctx = ErrorContext::new(pos, Some(snippet), "in escape sequence".to_string());
+          return Err(CirruError::with_context(
+            CirruErrorKind::Other("Unicode escape sequences (\\u) are not supported".to_string()),
+            error_ctx,
+          ));
         }
         '\\' => {
           state = CirruLexState::Str;
           buffer.push('\\');
         }
-        _ => return Err(format!("unexpected character during string escaping: {c:?}")),
+        _ => {
+          let pos = ctx.current_pos();
+          let snippet = ctx.get_context_snippet(code, 20);
+          let error_ctx = ErrorContext::new(pos, Some(snippet), "invalid escape sequence in string".to_string());
+          return Err(CirruError::with_context(CirruErrorKind::InvalidEscape(c), error_ctx));
+        }
       },
       CirruLexState::Indent => match c {
         ' ' => {
@@ -261,21 +331,26 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
           buffer.clear();
         }
         '"' => {
-          let level = parse_indentation(buffer.len() as u8)?;
+          let level = parse_indentation(buffer.len() as u8, &ctx, code)?;
           acc.push(level);
           state = CirruLexState::Str;
           buffer = String::new();
         }
         '(' => {
-          let level = parse_indentation(buffer.len() as u8)?;
+          let level = parse_indentation(buffer.len() as u8, &ctx, code)?;
           acc.push(level);
           acc.push(CirruLexItem::Open);
           state = CirruLexState::Space;
           buffer.clear();
         }
-        ')' => return Err(String::from("unexpected ) at line start")),
+        ')' => {
+          let pos = ctx.current_pos();
+          let snippet = ctx.get_context_snippet(code, 20);
+          let error_ctx = ErrorContext::new(pos, Some(snippet), "at line start".to_string());
+          return Err(CirruError::with_context(CirruErrorKind::UnexpectedCloseParen, error_ctx));
+        }
         _ => {
-          let level = parse_indentation(buffer.len() as u8)?;
+          let level = parse_indentation(buffer.len() as u8, &ctx, code)?;
           acc.push(level);
           state = CirruLexState::Token;
           buffer.clear();
@@ -283,6 +358,8 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
         }
       },
     }
+
+    ctx.advance(c);
   }
 
   match state {
@@ -291,9 +368,20 @@ pub fn lex(initial_code: &str) -> Result<CirruLexItemList, String> {
       acc.push(CirruLexItem::Str(buffer));
       Ok(acc)
     }
-    CirruLexState::Escape => Err(String::from("unknown escape")),
+    CirruLexState::Escape => {
+      let pos = ctx.current_pos();
+      let error_ctx = ErrorContext::new(pos, None, "at end of file".to_string());
+      Err(CirruError::with_context(
+        CirruErrorKind::Other("incomplete escape sequence".to_string()),
+        error_ctx,
+      ))
+    }
     CirruLexState::Indent => Ok(acc),
-    CirruLexState::Str => Err(String::from("finished at string")),
+    CirruLexState::Str => {
+      let pos = ctx.current_pos();
+      let error_ctx = ErrorContext::new(pos, None, "unclosed string literal".to_string());
+      Err(CirruError::with_context(CirruErrorKind::UnexpectedEof, error_ctx))
+    }
   }
 }
 
@@ -388,7 +476,8 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
 /// ```
 /// # use cirru_parser::{parse, Cirru};
 /// let code = "defn main\n  println \"Hello, world!\"";
-/// let expected = Ok(vec![
+/// let tree = parse(code).unwrap();
+/// let expected = vec![
 ///   Cirru::List(vec![
 ///     Cirru::Leaf("defn".into()),
 ///     Cirru::Leaf("main".into()),
@@ -397,11 +486,12 @@ pub fn resolve_indentations(tokens: &[CirruLexItem]) -> CirruLexItemList {
 ///       Cirru::Leaf("Hello, world!".into()),
 ///     ]),
 ///   ]),
-/// ]);
-/// assert_eq!(parse(code), expected);
+/// ];
+/// assert_eq!(tree, expected);
 /// ```
-pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
-  let tokens = resolve_indentations(&lex(code)?);
+pub fn parse(code: &str) -> Result<Vec<Cirru>, CirruError> {
+  let tokens = lex(code)?;
+  let tokens = resolve_indentations(&tokens);
   // println!("{:?}", tokens);
   let mut tree = build_exprs(&tokens)?;
   // println!("tree {:?}", tree);
@@ -410,14 +500,29 @@ pub fn parse(code: &str) -> Result<Vec<Cirru>, String> {
   Ok(tree)
 }
 
+/// Backward compatibility function that returns Result with String error
+#[deprecated(since = "0.2.0", note = "Use parse() instead which provides better error information")]
+pub fn parse_compat(code: &str) -> Result<Vec<Cirru>, String> {
+  parse(code).map_err(|e| e.to_string())
+}
+
+/// Backward compatibility function for lex that returns tokens with String error
+#[deprecated(since = "0.2.0", note = "Use lex() instead which provides better error information")]
+pub fn lex_simple(code: &str) -> Result<CirruLexItemList, String> {
+  lex(code).map_err(|e| e.to_string())
+}
+
 /// Parses a one-line Cirru expression into exactly one `Cirru` expression.
 ///
 /// This is a convenience wrapper over `parse` that enforces there is exactly one
 /// top-level expression.
-pub fn parse_expr_one_liner(code: &str) -> Result<Cirru, String> {
+pub fn parse_expr_one_liner(code: &str) -> Result<Cirru, CirruError> {
   let xs = parse(code)?;
   if xs.len() != 1 {
-    return Err(String::from("parse_expr_one_liner expects exactly 1 top-level expr"));
+    return Err(CirruError::new(CirruErrorKind::WrongExprCount {
+      expected: 1,
+      got: xs.len(),
+    }));
   }
   Ok(xs.into_iter().next().expect("len checked"))
 }

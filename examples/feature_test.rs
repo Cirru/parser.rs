@@ -21,7 +21,7 @@ fn main() {
     let json_str = r#"["hello", ["world", "!"]]"#;
     let cirru = from_json_str(json_str).unwrap();
     let back_to_json = to_json_str(cirru).unwrap();
-    println!("✓ JSON conversion utilities available: {}", back_to_json);
+    println!("✓ JSON conversion utilities available: {back_to_json}");
   }
 
   #[cfg(not(feature = "serde-json"))]

@@ -7,15 +7,15 @@ use cirru_parser::{lex, resolve_indentations};
 fn handle_indentation() -> Result<(), String> {
   use CirruLexItem::*;
   assert_eq!(
-    resolve_indentations(&lex("a\nb")?),
+    resolve_indentations(&lex("a\nb").map_err(|e| e.to_string())?),
     vec![Open, "a".into(), Close, Open, "b".into(), Close,]
   );
   assert_eq!(
-    resolve_indentations(&lex("a\n  b\nc")?),
+    resolve_indentations(&lex("a\n  b\nc").map_err(|e| e.to_string())?),
     vec![Open, "a".into(), Open, "b".into(), Close, Close, Open, "c".into(), Close,]
   );
   assert_eq!(
-    resolve_indentations(&lex("a\n  b c\nd")?),
+    resolve_indentations(&lex("a\n  b c\nd").map_err(|e| e.to_string())?),
     vec![
       Open,
       "a".into(),
@@ -30,7 +30,7 @@ fn handle_indentation() -> Result<(), String> {
     ]
   );
   assert_eq!(
-    resolve_indentations(&lex("a\n    b c\n    d e\n  f")?),
+    resolve_indentations(&lex("a\n    b c\n    d e\n  f").map_err(|e| e.to_string())?),
     vec![
       Open,
       "a".into(),

@@ -121,7 +121,10 @@ fn format_wast_tests() -> Result<(), String> {
     String::from(SIMPLE_CODE)
   );
 
-  assert_eq!(Cirru::List(parse(BIGGER_CODE_CIRRU)?).to_lisp()?, String::from(BIGGER_CODE));
+  assert_eq!(
+    Cirru::List(parse(BIGGER_CODE_CIRRU).map_err(|e| e.to_string())?).to_lisp()?,
+    String::from(BIGGER_CODE)
+  );
 
   Ok(())
 }

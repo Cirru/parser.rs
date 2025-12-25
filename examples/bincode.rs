@@ -5,7 +5,7 @@ fn main() -> Result<(), String> {
   let large_demo = "/Users/chenyong/repo/calcit-lang/editor/compact.cirru";
   let content = fs::read_to_string(large_demo).unwrap();
 
-  let v = parse(&content)?;
+  let v = parse(&content).map_err(|e| e.to_string())?;
 
   let buf = bincode::encode_to_vec(&v, bincode::config::standard()).map_err(|e| e.to_string())?;
 
