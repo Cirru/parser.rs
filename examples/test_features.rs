@@ -24,7 +24,7 @@ fn test_json_available() {
   let json_str = r#"["a", ["b", "c"]]"#;
   let cirru = from_json_str(json_str).unwrap();
   let back_to_json = to_json_str(cirru).unwrap();
-  println!("JSON functions available: {}", back_to_json);
+  println!("JSON functions available: {back_to_json}");
 }
 
 #[cfg(not(feature = "serde-json"))]

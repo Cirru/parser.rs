@@ -118,6 +118,14 @@ impl Cirru {
     }
   }
 
+  /// Formats this expression into a single line of Cirru code.
+  ///
+  /// Note: only list expressions can be formatted as an expression.
+  /// For `Cirru::Leaf`, this returns an error.
+  pub fn format_one_liner(&self) -> Result<String, String> {
+    crate::writer::format_expr_one_liner(self)
+  }
+
   /// display as lisp
   pub fn to_lisp(&self) -> Result<String, String> {
     match self {

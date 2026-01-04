@@ -126,6 +126,20 @@ fn render_newline(n: usize) -> String {
   ret
 }
 
+fn generate_statement_one_liner(xs: &[Cirru]) -> String {
+  let mut ret = String::new();
+  for (idx, cursor) in xs.iter().enumerate() {
+    if idx > 0 {
+      ret.push(' ');
+    }
+    match cursor {
+      Cirru::Leaf(s) => ret.push_str(&generate_leaf(s)),
+      Cirru::List(ys) => ret.push_str(&generate_inline_expr(ys)),
+    }
+  }
+  ret
+}
+
 /// options for writer, `use_inline` for more compact format.
 #[derive(Clone, Copy)]
 pub struct CirruWriterOptions {
@@ -302,4 +316,26 @@ fn generate_statements(ys: &[Cirru], options: CirruWriterOptions) -> Result<Stri
 /// format Cirru code, use options to control `use_inline` option
 pub fn format(xs: &[Cirru], options: CirruWriterOptions) -> Result<String, String> {
   generate_statements(xs, options)
+}
+
+/// Format a single Cirru expression as a single line without newlines or indentation.
+///
+/// Note: the top-level expression (a `Cirru::List`) is rendered without wrapping parentheses,
+/// while nested expressions are still rendered with parentheses.
+pub fn format_expr_one_liner(expr: &Cirru) -> Result<String, String> {
+  match expr {
+    Cirru::Leaf(_) => Err(String::from("format_expr_one_liner expects an expr (list)")),
+    Cirru::List(cs) => Ok(generate_statement_one_liner(cs)),
+  }
+}
+
+/// Extension trait for method-style one-liner formatting.
+pub trait CirruOneLinerExt {
+  fn format_one_liner(&self) -> Result<String, String>;
+}
+
+impl CirruOneLinerExt for Cirru {
+  fn format_one_liner(&self) -> Result<String, String> {
+    format_expr_one_liner(self)
+  }
 }

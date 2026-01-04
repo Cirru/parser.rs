@@ -14,7 +14,7 @@ pub fn from_json_str(s: &str) -> Result<Cirru, String> {
   let v: serde_json::Result<Value> = serde_json::from_str(s);
   match v {
     Ok(json) => Ok(from_json_value(json)),
-    Err(e) => Err(format!("error: {:?}", e)),
+    Err(e) => Err(format!("error: {e:?}")),
   }
 }
 
@@ -28,6 +28,6 @@ pub fn to_json_str(x: Cirru) -> Result<String, String> {
   let v = to_json_value(x);
   match serde_json::to_string(&v) {
     Ok(r) => Ok(r),
-    Err(e) => return Err(format!("error: {:?}", e)),
+    Err(e) => Err(format!("error: {e:?}")),
   }
 }

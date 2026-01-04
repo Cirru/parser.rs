@@ -25,39 +25,89 @@ is parsed into a tree structure that represents the nested expressions:
 ] ]
 ```
 
+## ✨ Improved Error Handling
+
+The parser provides **detailed error messages** with:
+
+- Exact line and column numbers
+- Code snippet preview with visual pointer (`^`)
+- Context description (e.g., "in string literal", "at line start")
+- Escaped special characters in snippets for clarity (shows `\n`, `\t`, etc.)
+
+Example error output:
+
+```
+Error: Invalid indentation (odd number: 3)
+  at line 2, column 4
+  context: checking indentation
+  near (escaped): ...defn calculate\n   add 1 2...
+```
+
 ## Usage
 
 Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cirru_parser = "0.1.33"
+cirru_parser = "0.2"
 ```
 
 ### Parsing
 
-To parse a string of Cirru code, use the `parse` function. It returns a `Result<Vec<Cirru>, String>`, where `Cirru` is an enum representing either a leaf (string) or a list of `Cirru` expressions.
+The `parse` function returns a `Result` with the parsed tree:
 
 ```rust
 use cirru_parser::{parse, Cirru};
 
-fn main() -> Result<(), String> {
+fn main() {
   let code = "defn main\n  println \"Hello, world!\"";
-  let tree = parse(code)?;
 
-  let expected = vec![
-    Cirru::List(vec![
-      Cirru::Leaf("defn".into()),
-      Cirru::Leaf("main".into()),
-      Cirru::List(vec![
-        Cirru::Leaf("println".into()),
-        Cirru::Leaf("Hello, world!".into()),
-      ]),
-    ]),
-  ];
+  match parse(code) {
+    Ok(tree) => {
+      println!("Parsed: {:?}", tree);
 
-  assert_eq!(tree, expected);
-  Ok(())
+      let expected = vec![
+        Cirru::List(vec![
+          Cirru::Leaf("defn".into()),
+          Cirru::Leaf("main".into()),
+          Cirru::List(vec![
+            Cirru::Leaf("println".into()),
+            Cirru::Leaf("Hello, world!".into()),
+          ]),
+        ]),
+      ];
+
+      assert_eq!(tree, expected);
+    }
+    Err(e) => {
+      eprintln!("Parse error: {}", e);
+      // For detailed error display:
+      // use cirru_parser::print_error;
+      // print_error(&e, Some(code));
+    }
+  }
+}
+```
+
+For cleaner error output with context:
+
+```rust
+use cirru_parser::{parse, print_error};
+
+fn main() {
+  let code = "defn calculate\n   add 1 2";  // Odd indentation (3 spaces)
+  
+  match parse(code) {
+    Ok(tree) => println!("Success: {:?}", tree),
+    Err(e) => {
+      print_error(&e, Some(code));
+      // Output:
+      // Error: Invalid indentation (odd number: 3)
+      //   at line 2, column 4
+      //   context: checking indentation
+      //   near (escaped): ...defn calculate\n   add 1 2...
+    }
+  }
 }
 ```
 
@@ -104,7 +154,7 @@ To use JSON conversion features, add them to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cirru_parser = { version = "0.1.33", features = ["serde-json"] }
+cirru_parser = { version = "0.2", features = ["serde-json"] }
 ```
 
 ### Examples

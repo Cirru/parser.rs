@@ -23,7 +23,8 @@ defn fib (n)
   let content = fs::read_to_string(large_demo).unwrap();
 
   match parse(&content) {
-    Ok(v) => {
+    Ok(result) => {
+      let v = result;
       let writer_options = CirruWriterOptions { use_inline: false };
       let t = format(&v, writer_options).unwrap();
       println!("{}", t.len());
