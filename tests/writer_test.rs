@@ -124,6 +124,28 @@ fn leaves_escapeing() {
 }
 
 #[test]
+fn leaf_single_quote_without_quotes() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
+
+  let xs = vec![Cirru::List(vec![Cirru::leaf("foo'bar")])];
+  let rendered = format(&xs, CirruWriterOptions::from(false))?;
+
+  assert_eq!("\nfoo'bar\n", rendered);
+  Ok(())
+}
+
+#[test]
+fn leaf_single_quote_with_spaces_requires_quotes() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
+
+  let xs = vec![Cirru::List(vec![Cirru::leaf("foo bar'baz")])];
+  let rendered = format(&xs, CirruWriterOptions::from(false))?;
+
+  assert_eq!("\n\"foo bar'baz\"\n", rendered);
+  Ok(())
+}
+
+#[test]
 fn test_writer_options_from_bool() -> Result<(), String> {
   use cirru_parser::{Cirru, CirruWriterOptions, format};
 

@@ -81,7 +81,6 @@ fn generate_leaf(s: &str) -> String {
         '\t' => ret.push_str("\\t"),
         '\"' => ret.push_str("\\\""),
         '\\' => ret.push_str("\\\\"),
-        '\'' => ret.push_str("\\'"),
         _ => ret.push(c),
       }
     }
