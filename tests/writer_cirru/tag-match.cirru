@@ -1,0 +1,4 @@
+
+tag-match self $
+  :plugin node cursor state
+  d! cursor $ assoc state :show? false
