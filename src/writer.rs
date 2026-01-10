@@ -196,9 +196,18 @@ fn generate_tree(
           if ys.is_empty() {
             String::from("$")
           } else {
-            let mut ret = String::from("$ ");
-            ret.push_str(&generate_tree(ys, false, options, level, at_tail)?);
-            ret
+            let content = generate_tree(ys, false, options, level, at_tail)?;
+            if content.starts_with('\n') {
+              // If content starts with newline, don't add space after $
+              let mut ret = String::from("$");
+              ret.push_str(&content);
+              ret
+            } else {
+              // Otherwise, add space after $
+              let mut ret = String::from("$ ");
+              ret.push_str(&content);
+              ret
+            }
           }
         } else if idx == 0 && insist_head {
           generate_inline_expr(ys)

@@ -61,6 +61,7 @@ mod json_write_test {
       "spaces",
       "unfolding",
       "list-match",
+      "tag-match",
     ];
     for file in files {
       println!("testing file: {file}");
@@ -175,4 +176,60 @@ fn test_writer_options_from_bool() -> Result<(), String> {
   assert_eq!(non_inline_result, non_inline_from_result);
 
   Ok(())
+}
+
+#[cfg(feature = "serde-json")]
+#[test]
+fn test_dollar_sign_spacing() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format, from_json_str};
+
+  // Test case from user: tag-match with nested structures
+  let json_str = r#"[
+    [
+      "tag-match",
+      "self",
+      [
+        [
+          ":plugin",
+          "node",
+          "cursor",
+          "state"
+        ],
+        [
+          "d!",
+          "cursor",
+          [
+            "assoc",
+            "state",
+            ":show?",
+            "false"
+          ]
+        ]
+      ]
+    ]
+  ]"#;
+
+  let writer_options = CirruWriterOptions { use_inline: false };
+
+  match from_json_str(json_str) {
+    Ok(tree) => {
+      if let Cirru::List(xs) = tree {
+        let result = format(&xs, writer_options)?;
+        println!("Formatted result:\n{}", result);
+
+        // Check that there's no "$ \n" pattern (dollar sign followed by space and newline)
+        assert!(!result.contains("$ \n"), "Found unexpected '$ \\n' pattern in output");
+
+        // The result should contain "$" followed directly by newline
+        // when there are nested structures after the dollar sign
+        Ok(())
+      } else {
+        panic!("unexpected leaf here")
+      }
+    }
+    Err(e) => {
+      println!("parse error: {e}");
+      Err(format!("failed to parse JSON: {e}"))
+    }
+  }
 }
