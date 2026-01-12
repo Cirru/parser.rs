@@ -96,7 +96,7 @@ dependencies = [
 
 [[package]]
 name = "cirru_parser"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bincode",
  "criterion",

@@ -127,13 +127,27 @@ fn render_newline(n: usize) -> String {
 
 fn generate_statement_one_liner(xs: &[Cirru]) -> String {
   let mut ret = String::new();
+  let len = xs.len();
   for (idx, cursor) in xs.iter().enumerate() {
     if idx > 0 {
       ret.push(' ');
     }
+    let at_tail = idx == len - 1 && idx > 0;
     match cursor {
       Cirru::Leaf(s) => ret.push_str(&generate_leaf(s)),
-      Cirru::List(ys) => ret.push_str(&generate_inline_expr(ys)),
+      Cirru::List(ys) => {
+        if at_tail {
+          // Use $ syntax for tail expressions
+          if ys.is_empty() {
+            ret.push('$');
+          } else {
+            ret.push_str("$ ");
+            ret.push_str(&generate_statement_one_liner(ys));
+          }
+        } else {
+          ret.push_str(&generate_inline_expr(ys));
+        }
+      }
     }
   }
   ret
