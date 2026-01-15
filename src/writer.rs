@@ -81,7 +81,6 @@ fn generate_leaf(s: &str) -> String {
         '\t' => ret.push_str("\\t"),
         '\"' => ret.push_str("\\\""),
         '\\' => ret.push_str("\\\\"),
-        '\'' => ret.push_str("\\'"),
         _ => ret.push(c),
       }
     }
@@ -128,13 +127,27 @@ fn render_newline(n: usize) -> String {
 
 fn generate_statement_one_liner(xs: &[Cirru]) -> String {
   let mut ret = String::new();
+  let len = xs.len();
   for (idx, cursor) in xs.iter().enumerate() {
     if idx > 0 {
       ret.push(' ');
     }
+    let at_tail = idx == len - 1 && idx > 0;
     match cursor {
       Cirru::Leaf(s) => ret.push_str(&generate_leaf(s)),
-      Cirru::List(ys) => ret.push_str(&generate_inline_expr(ys)),
+      Cirru::List(ys) => {
+        if at_tail {
+          // Use $ syntax for tail expressions
+          if ys.is_empty() {
+            ret.push('$');
+          } else {
+            ret.push_str("$ ");
+            ret.push_str(&generate_statement_one_liner(ys));
+          }
+        } else {
+          ret.push_str(&generate_inline_expr(ys));
+        }
+      }
     }
   }
   ret
@@ -197,9 +210,18 @@ fn generate_tree(
           if ys.is_empty() {
             String::from("$")
           } else {
-            let mut ret = String::from("$ ");
-            ret.push_str(&generate_tree(ys, false, options, level, at_tail)?);
-            ret
+            let content = generate_tree(ys, false, options, level, at_tail)?;
+            if content.starts_with('\n') {
+              // If content starts with newline, don't add space after $
+              let mut ret = String::from("$");
+              ret.push_str(&content);
+              ret
+            } else {
+              // Otherwise, add space after $
+              let mut ret = String::from("$ ");
+              ret.push_str(&content);
+              ret
+            }
           }
         } else if idx == 0 && insist_head {
           generate_inline_expr(ys)
