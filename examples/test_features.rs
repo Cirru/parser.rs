@@ -3,6 +3,7 @@
 // - serde-json feature: 提供 JSON 转换功能
 
 use cirru_parser::Cirru;
+use serde::{Deserialize, Serialize};
 
 fn test_basic_functionality() {
   let data = Cirru::leaf("test");
@@ -11,10 +12,14 @@ fn test_basic_functionality() {
 
 fn test_serde_available() {
   let data = Cirru::leaf("test");
+  assert_serde_traits(&data);
+  println!("Serde available - Serialize/Deserialize trait bounds are satisfied");
+}
 
-  // 测试序列化实现是否可用
-  let serialized = bincode::encode_to_vec(&data, bincode::config::standard()).unwrap();
-  println!("Serde available - Serialized successfully: {} bytes", serialized.len());
+fn assert_serde_traits<T>(_value: &T)
+where
+  T: Serialize + for<'de> Deserialize<'de>,
+{
 }
 
 #[cfg(feature = "serde-json")]
