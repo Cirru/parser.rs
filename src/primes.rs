@@ -12,7 +12,7 @@ use serde::{
 
 use crate::s_expr;
 
-/// Cirru uses nested Vecters and Strings as data structure
+/// Cirru uses nested Vectors and Strings as data structure
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Cirru {
   Leaf(Arc<str>),
