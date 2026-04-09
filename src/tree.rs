@@ -22,13 +22,12 @@ pub fn resolve_comma(xs: &mut Vec<Cirru>) {
     // Find a comma expression, which is a list starting with a comma leaf.
     // For example: `[`,`, `item1`, `item2`, ...]`
     for (i, x) in xs.iter().enumerate() {
-      if let Cirru::List(ys) = x {
-        if let Some(Cirru::Leaf(s)) = ys.first() {
-          if &**s == "," {
-            comma_pos = Some(i);
-            break;
-          }
-        }
+      if let Cirru::List(ys) = x
+        && let Some(Cirru::Leaf(s)) = ys.first()
+        && &**s == ","
+      {
+        comma_pos = Some(i);
+        break;
       }
     }
 
@@ -94,11 +93,11 @@ pub fn resolve_dollar(xs: &mut Vec<Cirru>) {
     let mut dollar_pos: Option<usize> = None;
     // Find the first occurrence of a dollar sign leaf from the right.
     for (i, x) in xs.iter().enumerate().rev() {
-      if let Cirru::Leaf(s) = x {
-        if &**s == "$" {
-          dollar_pos = Some(i);
-          break;
-        }
+      if let Cirru::Leaf(s) = x
+        && &**s == "$"
+      {
+        dollar_pos = Some(i);
+        break;
       }
     }
 

@@ -1,6 +1,7 @@
 // 验证新的 feature 结构：serde 默认启用，serde-json 可选
 
 use cirru_parser::Cirru;
+use serde::{Deserialize, Serialize};
 
 fn main() {
   println!("=== Cirru Parser Feature Test ===");
@@ -9,9 +10,9 @@ fn main() {
   let data = Cirru::leaf("hello");
   println!("✓ Basic Cirru functionality: {data}");
 
-  // Serde 序列化（默认启用）
-  let serialized = bincode::encode_to_vec(&data, bincode::config::standard()).unwrap();
-  println!("✓ Serde serialization works: {} bytes", serialized.len());
+  // Serde trait 支持（默认启用）
+  assert_serde_traits(&data);
+  println!("✓ Serde Serialize/Deserialize trait bounds are available");
 
   // JSON 转换工具（需要 serde-json feature）
   #[cfg(feature = "serde-json")]
@@ -30,4 +31,10 @@ fn main() {
   }
 
   println!("=== Test completed ===");
+}
+
+fn assert_serde_traits<T>(_value: &T)
+where
+  T: Serialize + for<'de> Deserialize<'de>,
+{
 }

@@ -1,4 +1,3 @@
-use bincode::{Decode, Encode};
 use std::clone::Clone;
 use std::fmt;
 use std::hash::Hash;
@@ -13,8 +12,8 @@ use serde::{
 
 use crate::s_expr;
 
-/// Cirru uses nested Vecters and Strings as data structure
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Decode, Encode)]
+/// Cirru uses nested Vectors and Strings as data structure
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Cirru {
   Leaf(Arc<str>),
   List(Vec<Cirru>),
@@ -155,10 +154,10 @@ impl Cirru {
       Cirru::Leaf(_) => false,
       Cirru::List(xs) => {
         for x in xs {
-          if let Cirru::List(ys) = x {
-            if !ys.is_empty() {
-              return true;
-            }
+          if let Cirru::List(ys) = x
+            && !ys.is_empty()
+          {
+            return true;
           }
         }
         false
