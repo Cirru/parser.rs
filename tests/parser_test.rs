@@ -49,6 +49,7 @@ mod json_test {
       "indent-twice",
       "indent",
       "let",
+      "match",
       "line",
       "paren-indent",
       "paren-indent2", // same result as parent-indent
