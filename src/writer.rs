@@ -182,6 +182,14 @@ fn get_node_kind(cursor: &Cirru) -> WriterNode {
   }
 }
 
+fn should_insist_nested_head(ys: &[Cirru], idx: usize, prev_kind: WriterNode) -> bool {
+  if prev_kind == WriterNode::BoxedExpr || prev_kind == WriterNode::Expr {
+    return true;
+  }
+
+  idx > 1 && matches!(ys.first(), Some(Cirru::List(head)) if head.len() > 1)
+}
+
 fn generate_tree(
   xs: &[Cirru],
   insist_head: bool,
@@ -196,7 +204,6 @@ fn generate_tree(
   for (idx, cursor) in xs.iter().enumerate() {
     let kind = get_node_kind(cursor);
     let next_level = level + 1;
-    let child_insist_head = (prev_kind == WriterNode::BoxedExpr) || (prev_kind == WriterNode::Expr);
     let at_tail = idx != 0 && !in_tail && prev_kind == WriterNode::Leaf && idx == xs.len() - 1;
 
     // println!("\nloop {:?} {:?}", prev_kind, kind);
@@ -206,6 +213,7 @@ fn generate_tree(
     let child: String = match cursor {
       Cirru::Leaf(s) => generate_leaf(s),
       Cirru::List(ys) => {
+        let child_insist_head = should_insist_nested_head(ys, idx, prev_kind);
         if at_tail {
           if ys.is_empty() {
             String::from("$")
@@ -234,8 +242,12 @@ fn generate_tree(
             generate_empty_expr() // special since empty expr is treated as leaf
           }
         } else if kind == WriterNode::SimpleExpr {
-          if prev_kind == WriterNode::Leaf {
+          if prev_kind == WriterNode::Leaf && (idx == 1 || level > base_level || xs.len().saturating_sub(idx) <= 2) {
             generate_inline_expr(ys)
+          } else if prev_kind == WriterNode::Leaf {
+            let mut ret = render_newline(next_level);
+            ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
+            ret
           } else if options.use_inline && prev_kind == WriterNode::SimpleExpr {
             let mut ret = String::from(" ");
             ret.push_str(&generate_inline_expr(ys));
@@ -273,7 +285,7 @@ fn generate_tree(
 
     let chunk = if at_tail
       || (prev_kind == WriterNode::Leaf && kind == WriterNode::Leaf)
-      || (prev_kind == WriterNode::Leaf && kind == WriterNode::SimpleExpr)
+      || (prev_kind == WriterNode::Leaf && kind == WriterNode::SimpleExpr && !child.starts_with('\n'))
       || prev_kind == WriterNode::SimpleExpr && kind == WriterNode::Leaf
     {
       let mut ret = String::from(" ");

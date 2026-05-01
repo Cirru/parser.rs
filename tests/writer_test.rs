@@ -52,6 +52,8 @@ mod json_write_test {
       "html",
       "indent",
       "inline-let",
+      "let",
+      "match",
       // "inline-mode",
       "inline-simple",
       "line",
@@ -175,6 +177,53 @@ fn test_writer_options_from_bool() -> Result<(), String> {
   assert_eq!(inline_result, inline_from_result);
   assert_eq!(non_inline_result, non_inline_from_result);
 
+  Ok(())
+}
+
+#[test]
+fn format_let_with_nested_second_element() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
+
+  let xs = vec![Cirru::List(vec![
+    Cirru::leaf("let"),
+    Cirru::List(vec![
+      Cirru::List(vec![Cirru::leaf("a"), Cirru::leaf("1")]),
+      Cirru::List(vec![Cirru::leaf("b"), Cirru::leaf("2")]),
+    ]),
+    Cirru::List(vec![Cirru::leaf("+"), Cirru::leaf("a"), Cirru::leaf("b")]),
+  ])];
+
+  let rendered = format(&xs, CirruWriterOptions::from(false))?;
+
+  assert_eq!("\nlet\n    a 1\n    b 2\n  + a b\n", rendered);
+  Ok(())
+}
+
+#[test]
+fn format_match_without_bending_later_clauses() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
+
+  let xs = vec![Cirru::List(vec![
+    Cirru::leaf("match"),
+    Cirru::leaf("x"),
+    Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("1")]),
+    Cirru::List(vec![Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("x")]), Cirru::leaf("2")]),
+    Cirru::List(vec![
+      Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("x"), Cirru::leaf("y")]),
+      Cirru::leaf("3"),
+    ]),
+    Cirru::List(vec![
+      Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("x"), Cirru::leaf("y"), Cirru::leaf("z")]),
+      Cirru::leaf("4"),
+    ]),
+  ])];
+
+  let rendered = format(&xs, CirruWriterOptions::from(false))?;
+
+  assert_eq!(
+    "\nmatch x\n  :dyn 1\n  (:dyn x) 2\n  (:dyn x y) 3\n  (:dyn x y z) 4\n",
+    rendered
+  );
   Ok(())
 }
 
