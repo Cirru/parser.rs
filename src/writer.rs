@@ -182,14 +182,6 @@ fn get_node_kind(cursor: &Cirru) -> WriterNode {
   }
 }
 
-fn should_insist_nested_head(ys: &[Cirru], idx: usize, prev_kind: WriterNode) -> bool {
-  if prev_kind == WriterNode::BoxedExpr || prev_kind == WriterNode::Expr {
-    return true;
-  }
-
-  idx > 1 && matches!(ys.first(), Some(Cirru::List(head)) if head.len() > 1)
-}
-
 fn generate_tree(
   xs: &[Cirru],
   insist_head: bool,
@@ -200,12 +192,11 @@ fn generate_tree(
   let mut prev_kind = WriterNode::Nil;
   let mut level = base_level;
   let mut result = String::from("");
-  // tracks whether the previously-generated child content was inline (did not start with '\n')
-  let mut prev_child_inline = true;
 
   for (idx, cursor) in xs.iter().enumerate() {
     let kind = get_node_kind(cursor);
     let next_level = level + 1;
+    let child_insist_head = (prev_kind == WriterNode::BoxedExpr) || (prev_kind == WriterNode::Expr) || idx > 1;
     let at_tail = idx != 0 && !in_tail && prev_kind == WriterNode::Leaf && idx == xs.len() - 1;
 
     // println!("\nloop {:?} {:?}", prev_kind, kind);
@@ -215,7 +206,6 @@ fn generate_tree(
     let child: String = match cursor {
       Cirru::Leaf(s) => generate_leaf(s),
       Cirru::List(ys) => {
-        let child_insist_head = should_insist_nested_head(ys, idx, prev_kind);
         if at_tail {
           if ys.is_empty() {
             String::from("$")
@@ -244,25 +234,12 @@ fn generate_tree(
             generate_empty_expr() // special since empty expr is treated as leaf
           }
         } else if kind == WriterNode::SimpleExpr {
-          if prev_kind == WriterNode::Leaf && (idx == 1 || level > base_level || xs.len().saturating_sub(idx) <= 2) {
+          if prev_kind == WriterNode::Leaf {
             generate_inline_expr(ys)
-          } else if prev_kind == WriterNode::Leaf {
-            let mut ret = render_newline(next_level);
-            ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
-            ret
           } else if options.use_inline && prev_kind == WriterNode::SimpleExpr {
-            // Only inline when the previous sibling was itself written inline.
-            // If the previous was block-formatted (started with '\n'), keep this one
-            // on its own line too so that sibling pairs in a struct/map stay separate.
-            if prev_child_inline {
-              let mut ret = String::from(" ");
-              ret.push_str(&generate_inline_expr(ys));
-              ret
-            } else {
-              let mut ret = render_newline(next_level);
-              ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
-              ret
-            }
+            let mut ret = String::from(" ");
+            ret.push_str(&generate_inline_expr(ys));
+            ret
           } else {
             let mut ret = render_newline(next_level);
             ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
@@ -279,7 +256,12 @@ fn generate_tree(
           }
         } else if kind == WriterNode::BoxedExpr {
           let content = generate_tree(ys, child_insist_head, options, next_level, false)?;
-          if prev_kind == WriterNode::Nil || prev_kind == WriterNode::Leaf || prev_kind == WriterNode::SimpleExpr {
+          if child_insist_head {
+            // special case for boxed expr when it insists head, it has both indentation and brackets
+            let mut ret = render_newline(next_level);
+            ret.push_str(&content);
+            ret
+          } else if prev_kind == WriterNode::Nil || prev_kind == WriterNode::Leaf || prev_kind == WriterNode::SimpleExpr {
             content
           } else {
             let mut ret = render_newline(next_level);
@@ -287,7 +269,7 @@ fn generate_tree(
             ret
           }
         } else {
-          return Err(String::from("Unpected condition"));
+          return Err(String::from("Unexpected condition"));
         }
       }
     };
@@ -296,7 +278,7 @@ fn generate_tree(
 
     let chunk = if at_tail
       || (prev_kind == WriterNode::Leaf && kind == WriterNode::Leaf)
-      || (prev_kind == WriterNode::Leaf && kind == WriterNode::SimpleExpr && !child.starts_with('\n'))
+      || (prev_kind == WriterNode::Leaf && kind == WriterNode::SimpleExpr)
       || prev_kind == WriterNode::SimpleExpr && kind == WriterNode::Leaf
     {
       let mut ret = String::from(" ");
@@ -336,9 +318,6 @@ fn generate_tree(
     if bended {
       level += 1;
     }
-
-    // update prev_child_inline: tracks if the current child was inline (no leading newline)
-    prev_child_inline = !chunk.starts_with('\n');
 
     // console.log("chunk", JSON.stringify(chunk));
     // console.log("And result", JSON.stringify(result));
