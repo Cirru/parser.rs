@@ -200,6 +200,8 @@ fn generate_tree(
   let mut prev_kind = WriterNode::Nil;
   let mut level = base_level;
   let mut result = String::from("");
+  // tracks whether the previously-generated child content was inline (did not start with '\n')
+  let mut prev_child_inline = true;
 
   for (idx, cursor) in xs.iter().enumerate() {
     let kind = get_node_kind(cursor);
@@ -249,9 +251,18 @@ fn generate_tree(
             ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
             ret
           } else if options.use_inline && prev_kind == WriterNode::SimpleExpr {
-            let mut ret = String::from(" ");
-            ret.push_str(&generate_inline_expr(ys));
-            ret
+            // Only inline when the previous sibling was itself written inline.
+            // If the previous was block-formatted (started with '\n'), keep this one
+            // on its own line too so that sibling pairs in a struct/map stay separate.
+            if prev_child_inline {
+              let mut ret = String::from(" ");
+              ret.push_str(&generate_inline_expr(ys));
+              ret
+            } else {
+              let mut ret = render_newline(next_level);
+              ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
+              ret
+            }
           } else {
             let mut ret = render_newline(next_level);
             ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
@@ -325,6 +336,9 @@ fn generate_tree(
     if bended {
       level += 1;
     }
+
+    // update prev_child_inline: tracks if the current child was inline (no leading newline)
+    prev_child_inline = !chunk.starts_with('\n');
 
     // console.log("chunk", JSON.stringify(chunk));
     // console.log("And result", JSON.stringify(result));

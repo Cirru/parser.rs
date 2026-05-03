@@ -116,6 +116,41 @@ mod json_write_test {
 }
 
 #[test]
+fn sibling_simple_exprs_in_struct_keep_separate_lines_with_use_inline() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format};
+  // When a struct has multiple sibling pairs and the first pair is block-formatted
+  // (not inlined), subsequent sibling SimpleExprs should also go on separate lines,
+  // not be appended inline to the previous line.
+  // Bug: with use_inline=true, `(:schema :dynamic)` was appended to the `:doc` line
+  // producing `:doc |long doc string (:schema :dynamic)` — a 3-element list that
+  // cirru_edn parsers reject as an invalid record field pair.
+  let xs = vec![Cirru::List(vec![
+    Cirru::leaf("%{}"),
+    Cirru::leaf(":CodeEntry"),
+    Cirru::List(vec![Cirru::leaf(":doc"), Cirru::leaf("|a long doc string")]),
+    Cirru::List(vec![Cirru::leaf(":schema"), Cirru::leaf(":dynamic")]),
+    Cirru::List(vec![Cirru::leaf(":code"), Cirru::leaf("stuff")]),
+  ])];
+
+  let rendered = format(&xs, CirruWriterOptions { use_inline: true })?;
+
+  // No single line should contain both :doc and :schema tokens
+  for line in rendered.lines() {
+    assert!(
+      !(line.contains(":doc") && line.contains(":schema")),
+      ":doc and :schema should be on separate lines, but got line: {:?}",
+      line
+    );
+  }
+
+  // Round-trip: parse the rendered output back and compare to the original tree
+  let reparsed = cirru_parser::parse(&rendered).expect("rendered output should be valid Cirru");
+  assert_eq!(xs, reparsed, "round-trip should preserve structure");
+
+  Ok(())
+}
+
+#[test]
 fn leaves_escapeing() {
   assert_eq!("\"a\"", escape_cirru_leaf("a"));
   assert_eq!("\"a b\"", escape_cirru_leaf("a b"));
