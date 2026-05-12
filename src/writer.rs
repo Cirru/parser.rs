@@ -62,7 +62,11 @@ fn is_char_allowed(x: char) -> bool {
   ALLOWED_CHARS.find(x).is_some()
 }
 
-fn generate_leaf(s: &str) -> String {
+/// Format a Cirru leaf token: returns the bare string if all characters are allowed
+/// in Cirru without quoting; otherwise wraps in double quotes with escape sequences.
+/// This mirrors the exact quoting behaviour used by the Cirru formatter when emitting
+/// leaf nodes, so callers outside this crate get consistent output.
+pub fn generate_leaf(s: &str) -> String {
   let mut all_allowed = true;
   for x in s.chars() {
     if !is_char_allowed(x) {

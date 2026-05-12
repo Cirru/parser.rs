@@ -172,6 +172,32 @@ impl Cirru {
       Cirru::Leaf(s) => &(**s) == ";" || &(**s) == ";;",
     }
   }
+
+  /// Returns `true` if this node is a `Leaf`.
+  pub fn is_leaf(&self) -> bool {
+    matches!(self, Self::Leaf(_))
+  }
+
+  /// Returns `true` if this node is a `List`.
+  pub fn is_list(&self) -> bool {
+    matches!(self, Self::List(_))
+  }
+
+  /// Returns the leaf string slice if this node is a `Leaf`, otherwise `None`.
+  pub fn as_leaf_str(&self) -> Option<&str> {
+    match self {
+      Self::Leaf(s) => Some(s),
+      _ => None,
+    }
+  }
+
+  /// Returns the first child node if this is a non-empty `List`, otherwise `None`.
+  pub fn head(&self) -> Option<&Cirru> {
+    match self {
+      Self::List(xs) => xs.first(),
+      _ => None,
+    }
+  }
 }
 
 #[derive(fmt::Debug, PartialEq, Eq)]
