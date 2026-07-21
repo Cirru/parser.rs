@@ -22,9 +22,9 @@ const FOLD_NON_TARGET_DEPTH: usize = 2;
 /// Max depth for the focus-target subtree before collapsing.
 const FOLD_TARGET_DEPTH: usize = 3;
 
-/// Build a `(folded "|…description")` placeholder node.
+/// Build a `|folded …` placeholder leaf node (compact, rendered as one token).
 fn folded_place(label: &str) -> Cirru {
-  Cirru::List(vec![Cirru::leaf("folded"), Cirru::leaf(label)])
+  Cirru::leaf(format!("|folded {label}"))
 }
 
 /// Structurally focus on a path within a Cirru tree, folding away irrelevant branches.
@@ -32,7 +32,7 @@ fn folded_place(label: &str) -> Cirru {
 /// Walks the tree via `path`, keeping at most `FOLD_SIBLINGS_HALF` siblings
 /// on each side of the target at every nesting level.  Non-target subtrees
 /// are capped at `FOLD_NON_TARGET_DEPTH`; the focus path is capped at
-/// `FOLD_TARGET_DEPTH`.  Hidden branches are replaced with `(folded "|…")` nodes.
+/// `FOLD_TARGET_DEPTH`.  Hidden branches are replaced with `|folded …` leaf tokens.
 ///
 /// # Example
 ///
