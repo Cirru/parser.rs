@@ -138,6 +138,19 @@ impl Cirru {
     Cirru::Leaf(s.into())
   }
 
+  /// Returns the leaf string content if this is a `Cirru::Leaf`, otherwise `None`.
+  pub fn as_leaf_str(&self) -> Option<&str> {
+    match self {
+      Cirru::Leaf(s) => Some(s),
+      _ => None,
+    }
+  }
+
+  /// Returns `true` if this is a `Cirru::List`.
+  pub fn is_list(&self) -> bool {
+    matches!(self, Cirru::List(_))
+  }
+
   /// compare it with a reference to string
   pub fn eq_leaf(&self, s: &str) -> bool {
     match self {
