@@ -79,12 +79,14 @@ fn focus_cirru_preview_impl(node: &Cirru, path: &[usize], depth: usize) -> Cirru
       // In Lisp-style prefix notation the head (position 0) carries
       // semantic meaning (operator / record tag / special form) — always
       // keep it visible even when siblings before the target are folded.
-      if start > 1 {
+      if start > 2 {
         result.push(fold_children_impl(&xs[0], FOLD_CHILDREN_NON_TARGET, 0, FOLD_NON_TARGET_DEPTH));
         result.push(folded_place(&format!("|…+{} nodes before", start - 1)));
-      } else if start > 0 {
-        // start == 1: head is at index 0 which is always kept
-        result.push(folded_place(&format!("|…+{} nodes before", start)));
+      } else {
+        // 1–2 nodes: too few to justify a fold, show them directly
+        for i in 0..start {
+          result.push(fold_children_impl(&xs[i], FOLD_CHILDREN_NON_TARGET, 0, FOLD_NON_TARGET_DEPTH));
+        }
       }
 
       for i in start..end {
@@ -96,8 +98,12 @@ fn focus_cirru_preview_impl(node: &Cirru, path: &[usize], depth: usize) -> Cirru
       }
 
       let remaining = xs.len() - end;
-      if remaining > 0 {
+      if remaining > 2 {
         result.push(folded_place(&format!("|…+{} nodes after", remaining)));
+      } else {
+        for i in end..xs.len() {
+          result.push(fold_children_impl(&xs[i], FOLD_CHILDREN_NON_TARGET, 0, FOLD_NON_TARGET_DEPTH));
+        }
       }
 
       Cirru::List(result)
@@ -112,7 +118,9 @@ fn fold_children_impl(node: &Cirru, max_children: usize, depth: usize, max_depth
   match node {
     Cirru::Leaf(_) => node.clone(),
     Cirru::List(xs) => {
-      if xs.len() <= max_children {
+      let hidden = xs.len().saturating_sub(max_children);
+      // Don't bother folding 1–2 nodes — just show them
+      if hidden <= 2 {
         let children: Vec<Cirru> = xs.iter().map(|c| fold_children_impl(c, max_children, depth + 1, max_depth)).collect();
         return Cirru::List(children);
       }
@@ -120,7 +128,7 @@ fn fold_children_impl(node: &Cirru, max_children: usize, depth: usize, max_depth
       for c in xs.iter().take(max_children) {
         result.push(fold_children_impl(c, max_children, depth + 1, max_depth));
       }
-      result.push(folded_place(&format!("|…+{} nodes inside", xs.len() - max_children)));
+      result.push(folded_place(&format!("|…+{} nodes inside", hidden)));
       Cirru::List(result)
     }
   }
