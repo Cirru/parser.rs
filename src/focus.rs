@@ -76,7 +76,14 @@ fn focus_cirru_preview_impl(node: &Cirru, path: &[usize], depth: usize) -> Cirru
 
       let mut result: Vec<Cirru> = Vec::new();
 
-      if start > 0 {
+      // In Lisp-style prefix notation the head (position 0) carries
+      // semantic meaning (operator / record tag / special form) — always
+      // keep it visible even when siblings before the target are folded.
+      if start > 1 {
+        result.push(fold_children_impl(&xs[0], FOLD_CHILDREN_NON_TARGET, 0, FOLD_NON_TARGET_DEPTH));
+        result.push(folded_place(&format!("|…+{} nodes before", start - 1)));
+      } else if start > 0 {
+        // start == 1: head is at index 0 which is always kept
         result.push(folded_place(&format!("|…+{} nodes before", start)));
       }
 
