@@ -46,7 +46,7 @@ use tree::{resolve_comma, resolve_dollar};
 
 pub use primes::{Cirru, CirruLexItem, CirruLexItemList, escape_cirru_leaf};
 pub use s_expr::format_to_lisp;
-pub use writer::{CirruOneLinerExt, CirruWriterOptions, format, format_expr_one_liner, generate_leaf};
+pub use writer::{CirruOneLinerExt, CirruWriterOptions, focus_cirru_preview, format, format_expr_one_liner, generate_leaf};
 
 /// Helper function to format and print a detailed error
 pub fn print_error(error: &CirruError, source_code: Option<&str>) {
