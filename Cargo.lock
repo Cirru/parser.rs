@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "cirru_parser"
-version = "0.2.11"
+version = "0.2.12"
 dependencies = [
  "criterion",
  "serde",
