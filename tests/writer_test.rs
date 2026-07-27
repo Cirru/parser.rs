@@ -206,7 +206,7 @@ fn format_match_without_bending_later_clauses() -> Result<(), String> {
   let xs = vec![Cirru::List(vec![
     Cirru::leaf("match"),
     Cirru::leaf("x"),
-    Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("1")]),
+    Cirru::List(vec![Cirru::List(vec![Cirru::leaf(":dyn")]), Cirru::leaf("1")]),
     Cirru::List(vec![Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("x")]), Cirru::leaf("2")]),
     Cirru::List(vec![
       Cirru::List(vec![Cirru::leaf(":dyn"), Cirru::leaf("x"), Cirru::leaf("y")]),
@@ -220,10 +220,7 @@ fn format_match_without_bending_later_clauses() -> Result<(), String> {
 
   let rendered = format(&xs, CirruWriterOptions::from(false))?;
 
-  assert_eq!(
-    "\nmatch x\n  :dyn 1\n  (:dyn x) 2\n  (:dyn x y) 3\n  (:dyn x y z) 4\n",
-    rendered
-  );
+  assert_eq!("\nmatch x\n  (:dyn) 1\n  (:dyn x) 2\n  (:dyn x y) 3\n  (:dyn x y z) 4\n", rendered);
   Ok(())
 }
 
