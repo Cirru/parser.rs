@@ -6,7 +6,9 @@
 //! cargo run --example focus_cirru_preview
 //! ```
 
-use cirru_parser::{Cirru, CirruOneLinerParseExt, CirruWriterOptions, focus_cirru_preview, format};
+use cirru_parser::{
+  Cirru, CirruFocusOptions, CirruOneLinerParseExt, CirruWriterOptions, focus_cirru_preview, focus_cirru_preview_with_options, format,
+};
 
 fn path_exists(node: &Cirru, path: &[usize]) -> bool {
   let mut current = node;
@@ -75,6 +77,22 @@ fn main() -> Result<(), String> {
   for (code, paths) in cases {
     show(code, paths)?;
   }
+
+  let definition = "defn render (value options) (let (result (transform value options)) (println result) result)"
+    .parse_expr_one_liner()
+    .map_err(|e| e.to_string())?;
+  let focus_options = CirruFocusOptions::default()
+    .with_focus_marker("CURSOR")
+    .with_root_prefix(3)
+    .with_target_limits(3, 2);
+  let focused = focus_cirru_preview_with_options(&definition, &[3, 2, 1], &focus_options);
+  println!("custom definition focus:");
+  print_block(
+    "result",
+    format(&[focused], CirruWriterOptions { use_inline: false })
+      .map_err(|e| e.to_string())?
+      .trim(),
+  );
 
   // A leaf is also a valid input; focusing an invalid coordinate folds the
   // available tree without panicking.

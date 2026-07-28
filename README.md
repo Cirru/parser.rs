@@ -138,6 +138,29 @@ let escaped = escape_cirru_leaf("a b");
 assert_eq!(escaped, "\"a b\"");
 ```
 
+### Focused tree previews
+
+`focus_cirru_preview` returns a compact presentation tree around a numeric
+path. Its default output is backward compatible. Tools can customize the
+presentation marker, preserve a semantic root prefix, and tune folding limits
+without changing the source tree:
+
+```rust
+use cirru_parser::{Cirru, CirruFocusOptions, focus_cirru_preview_with_options};
+
+let tree = Cirru::List(vec![
+    Cirru::leaf("defn"),
+    Cirru::leaf("render"),
+    Cirru::List(vec![Cirru::leaf("value")]),
+    Cirru::List(vec![Cirru::leaf("println"), Cirru::leaf("value")]),
+]);
+let options = CirruFocusOptions::default()
+    .with_focus_marker("CURSOR")
+    .with_root_prefix(3)
+    .with_target_limits(3, 2);
+let preview = focus_cirru_preview_with_options(&tree, &[3, 1], &options);
+```
+
 ## Features
 
 This crate provides the following features:

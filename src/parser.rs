@@ -24,8 +24,8 @@ find more on <http://text.cirru.org/> .
 */
 
 mod error;
-mod primes;
 mod focus;
+mod primes;
 mod s_expr;
 mod tree;
 mod writer;
@@ -45,9 +45,9 @@ use std::cmp::Ordering::*;
 use primes::CirruLexState;
 use tree::{resolve_comma, resolve_dollar};
 
+pub use focus::{CirruFocusOptions, focus_cirru_preview, focus_cirru_preview_with_options};
 pub use primes::{Cirru, CirruLexItem, CirruLexItemList, escape_cirru_leaf};
 pub use s_expr::format_to_lisp;
-pub use focus::focus_cirru_preview;
 pub use writer::{CirruOneLinerExt, CirruWriterOptions, format, format_expr_one_liner, generate_leaf};
 
 /// Helper function to format and print a detailed error
