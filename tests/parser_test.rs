@@ -65,7 +65,7 @@ mod json_test {
       let cirru_str = fs::read_to_string(format!("./tests/cirru/{file}.cirru"))?;
 
       assert_eq!(
-        parse(&cirru_str).map(|r| Cirru::List(r)).map_err(|e| e.to_string()),
+        parse(&cirru_str).map(Cirru::List).map_err(|e| e.to_string()),
         from_json_str(&json_str)
       );
     }
