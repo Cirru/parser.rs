@@ -14,6 +14,9 @@ enum WriterNode {
 const CHAR_CLOSE: char = ')';
 const CHAR_OPEN: char = '(';
 const ALLOWED_CHARS: &str = "$-:<>[]{}*=+.,\\/!?~_@#&%^|;'";
+const MAX_SIMPLE_EXPR_LEAVES: usize = 8;
+const MAX_SIMPLE_LEAF_CHARS: usize = 16;
+const MAX_TAIL_FOLDS: usize = 2;
 
 fn is_a_digit(c: char) -> bool {
   let n = c as usize;
@@ -33,10 +36,18 @@ fn is_a_letter(c: char) -> bool {
 }
 
 fn is_simple_expr(ys: &[Cirru]) -> bool {
+  if ys.len() > MAX_SIMPLE_EXPR_LEAVES {
+    return false;
+  }
+
   for y in ys {
     match y {
       Cirru::List(_) => return false,
-      Cirru::Leaf(_) => (),
+      Cirru::Leaf(s) => {
+        if s.chars().count() > MAX_SIMPLE_LEAF_CHARS {
+          return false;
+        }
+      }
     }
   }
   true
@@ -191,7 +202,7 @@ fn generate_tree(
   insist_head: bool,
   options: CirruWriterOptions,
   base_level: usize,
-  in_tail: bool,
+  tail_folds: usize,
 ) -> Result<String, String> {
   let mut prev_kind = WriterNode::Nil;
   let mut level = base_level;
@@ -201,7 +212,7 @@ fn generate_tree(
     let kind = get_node_kind(cursor);
     let next_level = level + 1;
     let child_insist_head = (prev_kind == WriterNode::BoxedExpr) || (prev_kind == WriterNode::Expr) || idx > 1;
-    let at_tail = idx != 0 && !in_tail && prev_kind == WriterNode::Leaf && idx == xs.len() - 1;
+    let at_tail = idx != 0 && tail_folds < MAX_TAIL_FOLDS && prev_kind == WriterNode::Leaf && idx == xs.len() - 1;
 
     // println!("\nloop {:?} {:?}", prev_kind, kind);
     // println!("cursor {:?} {} {}", cursor, idx, insist_head);
@@ -214,7 +225,7 @@ fn generate_tree(
           if ys.is_empty() {
             String::from("$")
           } else {
-            let content = generate_tree(ys, false, options, level, at_tail)?;
+            let content = generate_tree(ys, false, options, level, tail_folds + 1)?;
             if content.starts_with('\n') {
               // If content starts with newline, don't add space after $
               let mut ret = String::from("$");
@@ -246,11 +257,11 @@ fn generate_tree(
             ret
           } else {
             let mut ret = render_newline(next_level);
-            ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, false)?);
+            ret.push_str(&generate_tree(ys, child_insist_head, options, next_level, 0)?);
             ret
           }
         } else if kind == WriterNode::Expr {
-          let content = generate_tree(ys, child_insist_head, options, next_level, false)?;
+          let content = generate_tree(ys, child_insist_head, options, next_level, 0)?;
           if content.starts_with('\n') {
             content
           } else {
@@ -259,7 +270,7 @@ fn generate_tree(
             ret
           }
         } else if kind == WriterNode::BoxedExpr {
-          let content = generate_tree(ys, child_insist_head, options, next_level, false)?;
+          let content = generate_tree(ys, child_insist_head, options, next_level, 0)?;
           if child_insist_head {
             // special case for boxed expr when it insists head, it has both indentation and brackets
             let mut ret = render_newline(next_level);
@@ -336,7 +347,7 @@ fn generate_statements(ys: &[Cirru], options: CirruWriterOptions) -> Result<Stri
       Cirru::Leaf(_) => return Err(String::from("expected an exprs at top level")),
       Cirru::List(cs) => {
         zs.push('\n');
-        zs.push_str(&generate_tree(cs, true, options, 0, false)?);
+        zs.push_str(&generate_tree(cs, true, options, 0, 0)?);
         zs.push('\n');
       }
     }

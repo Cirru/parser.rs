@@ -224,6 +224,93 @@ fn format_match_without_bending_later_clauses() -> Result<(), String> {
   Ok(())
 }
 
+#[test]
+fn format_allows_two_tail_folds_on_one_line() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
+
+  let xs = vec![Cirru::List(vec![
+    Cirru::leaf("a"),
+    Cirru::List(vec![
+      Cirru::leaf("b"),
+      Cirru::List(vec![Cirru::leaf("c"), Cirru::List(vec![Cirru::leaf("d"), Cirru::leaf("e")])]),
+    ]),
+  ])];
+
+  let rendered = format(&xs, CirruWriterOptions::from(true))?;
+
+  assert_eq!("\na $ b $ c (d e)\n", rendered);
+  assert_eq!(xs, parse(&rendered).expect("rendered output should remain valid Cirru"));
+  Ok(())
+}
+
+#[test]
+fn format_inlines_short_simple_expressions() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
+
+  let xs = vec![Cirru::List(vec![
+    Cirru::leaf("{}"),
+    Cirru::List(vec![
+      Cirru::leaf("a"),
+      Cirru::leaf("b"),
+      Cirru::leaf("c"),
+      Cirru::leaf("d"),
+      Cirru::leaf("e"),
+      Cirru::leaf("f"),
+      Cirru::leaf("g"),
+      Cirru::leaf("h"),
+    ]),
+    Cirru::List(vec![Cirru::leaf("i"), Cirru::leaf("j")]),
+  ])];
+
+  let rendered = format(&xs, CirruWriterOptions::from(true))?;
+
+  assert_eq!("\n{} (a b c d e f g h) (i j)\n", rendered);
+  assert_eq!(xs, parse(&rendered).expect("rendered output should remain valid Cirru"));
+  Ok(())
+}
+
+#[test]
+fn format_does_not_inline_oversized_simple_expressions() -> Result<(), String> {
+  use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
+
+  let nine_leaves = Cirru::List(vec![
+    Cirru::leaf("a"),
+    Cirru::leaf("b"),
+    Cirru::leaf("c"),
+    Cirru::leaf("d"),
+    Cirru::leaf("e"),
+    Cirru::leaf("f"),
+    Cirru::leaf("g"),
+    Cirru::leaf("h"),
+    Cirru::leaf("i"),
+  ]);
+  let long_leaf = Cirru::List(vec![Cirru::leaf("label"), Cirru::leaf("12345678901234567")]);
+  let xs = vec![Cirru::List(vec![Cirru::leaf("{}"), nine_leaves, long_leaf])];
+
+  let rendered = format(&xs, CirruWriterOptions::from(true))?;
+
+  assert!(!rendered.contains("(a b c d e f g h i)"));
+  assert!(!rendered.contains("(label 12345678901234567)"));
+  assert_eq!(xs, parse(&rendered).expect("rendered output should remain valid Cirru"));
+  Ok(())
+}
+
+#[test]
+fn format_wasi_wait_fixture_with_new_layout_rules() -> Result<(), String> {
+  use cirru_parser::{CirruWriterOptions, format, parse};
+
+  let source = include_str!("writer_cases/wasi-wait.cirru");
+  let tree = parse(source).expect("wasi-wait fixture should parse");
+  let rendered = format(&tree, CirruWriterOptions::from(true))?;
+
+  assert_eq!(source, rendered, "wasi-wait fixture should already use the canonical writer layout");
+  assert!(rendered.contains(":code $ quote $ defn wait-ms (milliseconds)"));
+  assert!(rendered.contains(":edges $ #{} $ :: :call 'calcit.core/wait-ms 'calcit.core/&wait-ms"));
+  assert!(rendered.contains("and (round? milliseconds) (>= milliseconds 0) (<= milliseconds 4294967295)"));
+  assert_eq!(tree, parse(&rendered).expect("formatted fixture should preserve its tree"));
+  Ok(())
+}
+
 #[cfg(feature = "serde-json")]
 #[test]
 fn test_dollar_sign_spacing() -> Result<(), String> {

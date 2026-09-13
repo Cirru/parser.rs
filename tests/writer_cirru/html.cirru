@@ -17,7 +17,7 @@ html
         span $ = " "
         a (:href a)
           = b
-      .line $ span (= a)
+      .line $ span $ = a
     #list
       .year $ = 2014
       .month $ = May
