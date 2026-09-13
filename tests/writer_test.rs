@@ -225,10 +225,18 @@ fn format_match_without_bending_later_clauses() -> Result<(), String> {
 }
 
 #[test]
-fn format_allows_two_tail_folds_on_one_line() -> Result<(), String> {
+fn format_tail_fold_boundaries() -> Result<(), String> {
   use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
 
-  let xs = vec![Cirru::List(vec![
+  let one_fold = vec![Cirru::List(vec![
+    Cirru::leaf("a"),
+    Cirru::List(vec![Cirru::leaf("b"), Cirru::leaf("c")]),
+  ])];
+  let two_folds = vec![Cirru::List(vec![
+    Cirru::leaf("a"),
+    Cirru::List(vec![Cirru::leaf("b"), Cirru::List(vec![Cirru::leaf("c"), Cirru::leaf("d")])]),
+  ])];
+  let three_folds = vec![Cirru::List(vec![
     Cirru::leaf("a"),
     Cirru::List(vec![
       Cirru::leaf("b"),
@@ -236,62 +244,111 @@ fn format_allows_two_tail_folds_on_one_line() -> Result<(), String> {
     ]),
   ])];
 
-  let rendered = format(&xs, CirruWriterOptions::from(true))?;
+  let one_rendered = format(&one_fold, CirruWriterOptions::from(true))?;
+  let two_rendered = format(&two_folds, CirruWriterOptions::from(true))?;
+  let three_rendered = format(&three_folds, CirruWriterOptions::from(true))?;
 
-  assert_eq!("\na $ b $ c (d e)\n", rendered);
-  assert_eq!(xs, parse(&rendered).expect("rendered output should remain valid Cirru"));
+  assert_eq!("\na $ b c\n", one_rendered);
+  assert_eq!("\na $ b $ c d\n", two_rendered);
+  assert_eq!("\na $ b $ c (d e)\n", three_rendered);
+  assert_eq!(one_fold, parse(&one_rendered).expect("one-fold output should remain valid Cirru"));
+  assert_eq!(two_folds, parse(&two_rendered).expect("two-fold output should remain valid Cirru"));
+  assert_eq!(
+    three_folds,
+    parse(&three_rendered).expect("three-fold output should remain valid Cirru")
+  );
   Ok(())
 }
 
 #[test]
-fn format_inlines_short_simple_expressions() -> Result<(), String> {
+fn format_simple_expression_leaf_count_boundaries() -> Result<(), String> {
   use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
 
-  let xs = vec![Cirru::List(vec![
-    Cirru::leaf("{}"),
-    Cirru::List(vec![
-      Cirru::leaf("a"),
-      Cirru::leaf("b"),
-      Cirru::leaf("c"),
-      Cirru::leaf("d"),
-      Cirru::leaf("e"),
-      Cirru::leaf("f"),
-      Cirru::leaf("g"),
-      Cirru::leaf("h"),
-    ]),
-    Cirru::List(vec![Cirru::leaf("i"), Cirru::leaf("j")]),
-  ])];
+  let simple_expr = |size: usize| Cirru::List((0..size).map(|idx| Cirru::leaf(format!("x{idx}"))).collect());
+  let seven = vec![Cirru::List(vec![Cirru::leaf("{}"), simple_expr(7), Cirru::leaf("tail")])];
+  let eight = vec![Cirru::List(vec![Cirru::leaf("{}"), simple_expr(8), Cirru::leaf("tail")])];
+  let nine = vec![Cirru::List(vec![Cirru::leaf("{}"), simple_expr(9), Cirru::leaf("tail")])];
 
-  let rendered = format(&xs, CirruWriterOptions::from(true))?;
+  let seven_rendered = format(&seven, CirruWriterOptions::from(true))?;
+  let eight_rendered = format(&eight, CirruWriterOptions::from(true))?;
+  let nine_rendered = format(&nine, CirruWriterOptions::from(true))?;
 
-  assert_eq!("\n{} (a b c d e f g h) (i j)\n", rendered);
-  assert_eq!(xs, parse(&rendered).expect("rendered output should remain valid Cirru"));
+  assert_eq!("\n{} (x0 x1 x2 x3 x4 x5 x6) tail\n", seven_rendered);
+  assert_eq!("\n{} (x0 x1 x2 x3 x4 x5 x6 x7) tail\n", eight_rendered);
+  assert_eq!("\n{}\n  x0 x1 x2 x3 x4 x5 x6 x7 x8\n  , tail\n", nine_rendered);
+  assert_eq!(seven, parse(&seven_rendered).expect("seven-leaf output should remain valid Cirru"));
+  assert_eq!(eight, parse(&eight_rendered).expect("eight-leaf output should remain valid Cirru"));
+  assert_eq!(nine, parse(&nine_rendered).expect("nine-leaf output should remain valid Cirru"));
   Ok(())
 }
 
 #[test]
-fn format_does_not_inline_oversized_simple_expressions() -> Result<(), String> {
+fn format_simple_expression_leaf_length_boundaries() -> Result<(), String> {
   use cirru_parser::{Cirru, CirruWriterOptions, format, parse};
 
-  let nine_leaves = Cirru::List(vec![
-    Cirru::leaf("a"),
-    Cirru::leaf("b"),
-    Cirru::leaf("c"),
-    Cirru::leaf("d"),
-    Cirru::leaf("e"),
-    Cirru::leaf("f"),
-    Cirru::leaf("g"),
-    Cirru::leaf("h"),
-    Cirru::leaf("i"),
-  ]);
-  let long_leaf = Cirru::List(vec![Cirru::leaf("label"), Cirru::leaf("12345678901234567")]);
-  let xs = vec![Cirru::List(vec![Cirru::leaf("{}"), nine_leaves, long_leaf])];
+  let expr_with_value = |value: &str| {
+    vec![Cirru::List(vec![
+      Cirru::leaf("{}"),
+      Cirru::List(vec![Cirru::leaf("label"), Cirru::leaf(value)]),
+      Cirru::leaf("tail"),
+    ])]
+  };
+  let fifteen = expr_with_value("123456789012345");
+  let sixteen = expr_with_value("1234567890123456");
+  let seventeen = expr_with_value("12345678901234567");
+  let unicode_sixteen = expr_with_value("甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳");
 
-  let rendered = format(&xs, CirruWriterOptions::from(true))?;
+  let fifteen_rendered = format(&fifteen, CirruWriterOptions::from(true))?;
+  let sixteen_rendered = format(&sixteen, CirruWriterOptions::from(true))?;
+  let seventeen_rendered = format(&seventeen, CirruWriterOptions::from(true))?;
+  let unicode_rendered = format(&unicode_sixteen, CirruWriterOptions::from(true))?;
 
-  assert!(!rendered.contains("(a b c d e f g h i)"));
-  assert!(!rendered.contains("(label 12345678901234567)"));
-  assert_eq!(xs, parse(&rendered).expect("rendered output should remain valid Cirru"));
+  assert_eq!("\n{} (label 123456789012345) tail\n", fifteen_rendered);
+  assert_eq!("\n{} (label 1234567890123456) tail\n", sixteen_rendered);
+  assert_eq!("\n{}\n  label 12345678901234567\n  , tail\n", seventeen_rendered);
+  assert_eq!("\n{} (label \"甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳\") tail\n", unicode_rendered);
+  assert_eq!(fifteen, parse(&fifteen_rendered).expect("15-char output should remain valid Cirru"));
+  assert_eq!(sixteen, parse(&sixteen_rendered).expect("16-char output should remain valid Cirru"));
+  assert_eq!(
+    seventeen,
+    parse(&seventeen_rendered).expect("17-char output should remain valid Cirru")
+  );
+  assert_eq!(
+    unicode_sixteen,
+    parse(&unicode_rendered).expect("16-char Unicode output should remain valid Cirru")
+  );
+  Ok(())
+}
+
+#[test]
+fn format_calcit_fixtures_are_short_canonical_and_lossless() -> Result<(), String> {
+  use cirru_parser::{CirruWriterOptions, format, parse};
+
+  // Canonicalized excerpts from calcit/test-set.cirru,
+  // calcit/type-fail/js-nullish-dereference-strict.cirru, and
+  // calcit/type-fail/whole-dynamic-schema-strict.cirru.
+  let fixtures = [
+    ("calcit-test-set", include_str!("writer_cases/calcit-test-set.cirru")),
+    (
+      "calcit-js-nullish-dereference",
+      include_str!("writer_cases/calcit-js-nullish-dereference.cirru"),
+    ),
+    (
+      "calcit-whole-dynamic-schema",
+      include_str!("writer_cases/calcit-whole-dynamic-schema.cirru"),
+    ),
+  ];
+
+  for (name, source) in fixtures {
+    assert!(source.lines().count() <= 30, "{name} should stay within 30 lines");
+    let tree = parse(source).unwrap_or_else(|error| panic!("{name} should parse: {error}"));
+    let rendered = format(&tree, CirruWriterOptions::from(true))?;
+    assert_eq!(source, rendered, "{name} should already use the canonical writer layout");
+    assert_eq!(
+      tree,
+      parse(&rendered).unwrap_or_else(|error| panic!("formatted {name} should parse: {error}"))
+    );
+  }
   Ok(())
 }
 
