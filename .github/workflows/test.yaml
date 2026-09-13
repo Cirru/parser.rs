@@ -27,7 +27,7 @@ jobs:
         with:
           version: "latest"
 
-      - run: (cd wasm-example/ && wasm-pack build -t web)
+      - run: (cd wasm-example/ && wasm-pack build -t web --no-opt)
 
       - name: "compiles to js"
         run: (cd wasm-example/ && yarn && yarn vite build --base=./)
