@@ -15,7 +15,7 @@ const CHAR_CLOSE: char = ')';
 const CHAR_OPEN: char = '(';
 const ALLOWED_CHARS: &str = "$-:<>[]{}*=+.,\\/!?~_@#&%^|;'";
 const MAX_SIMPLE_EXPR_LEAVES: usize = 8;
-const MAX_SIMPLE_LEAF_CHARS: usize = 16;
+const MAX_SIMPLE_LEAF_CHARS: usize = 48;
 const MAX_TAIL_FOLDS: usize = 2;
 
 fn is_a_digit(c: char) -> bool {

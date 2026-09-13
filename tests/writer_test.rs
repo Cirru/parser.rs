@@ -293,29 +293,39 @@ fn format_simple_expression_leaf_length_boundaries() -> Result<(), String> {
       Cirru::leaf("tail"),
     ])]
   };
-  let fifteen = expr_with_value("123456789012345");
-  let sixteen = expr_with_value("1234567890123456");
-  let seventeen = expr_with_value("12345678901234567");
-  let unicode_sixteen = expr_with_value("甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳");
+  let forty_seven_value = "x".repeat(47);
+  let forty_eight_value = "x".repeat(48);
+  let forty_nine_value = "x".repeat(49);
+  let unicode_forty_eight_value = "甲".repeat(48);
+  let forty_seven = expr_with_value(&forty_seven_value);
+  let forty_eight = expr_with_value(&forty_eight_value);
+  let forty_nine = expr_with_value(&forty_nine_value);
+  let unicode_forty_eight = expr_with_value(&unicode_forty_eight_value);
 
-  let fifteen_rendered = format(&fifteen, CirruWriterOptions::from(true))?;
-  let sixteen_rendered = format(&sixteen, CirruWriterOptions::from(true))?;
-  let seventeen_rendered = format(&seventeen, CirruWriterOptions::from(true))?;
-  let unicode_rendered = format(&unicode_sixteen, CirruWriterOptions::from(true))?;
+  let forty_seven_rendered = format(&forty_seven, CirruWriterOptions::from(true))?;
+  let forty_eight_rendered = format(&forty_eight, CirruWriterOptions::from(true))?;
+  let forty_nine_rendered = format(&forty_nine, CirruWriterOptions::from(true))?;
+  let unicode_rendered = format(&unicode_forty_eight, CirruWriterOptions::from(true))?;
 
-  assert_eq!("\n{} (label 123456789012345) tail\n", fifteen_rendered);
-  assert_eq!("\n{} (label 1234567890123456) tail\n", sixteen_rendered);
-  assert_eq!("\n{}\n  label 12345678901234567\n  , tail\n", seventeen_rendered);
-  assert_eq!("\n{} (label \"甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳\") tail\n", unicode_rendered);
-  assert_eq!(fifteen, parse(&fifteen_rendered).expect("15-char output should remain valid Cirru"));
-  assert_eq!(sixteen, parse(&sixteen_rendered).expect("16-char output should remain valid Cirru"));
+  assert_eq!(format!("\n{{}} (label {}) tail\n", forty_seven_value), forty_seven_rendered);
+  assert_eq!(format!("\n{{}} (label {}) tail\n", forty_eight_value), forty_eight_rendered);
+  assert_eq!(format!("\n{{}}\n  label {}\n  , tail\n", forty_nine_value), forty_nine_rendered);
+  assert_eq!(format!("\n{{}} (label \"{}\") tail\n", unicode_forty_eight_value), unicode_rendered);
   assert_eq!(
-    seventeen,
-    parse(&seventeen_rendered).expect("17-char output should remain valid Cirru")
+    forty_seven,
+    parse(&forty_seven_rendered).expect("47-char output should remain valid Cirru")
   );
   assert_eq!(
-    unicode_sixteen,
-    parse(&unicode_rendered).expect("16-char Unicode output should remain valid Cirru")
+    forty_eight,
+    parse(&forty_eight_rendered).expect("48-char output should remain valid Cirru")
+  );
+  assert_eq!(
+    forty_nine,
+    parse(&forty_nine_rendered).expect("49-char output should remain valid Cirru")
+  );
+  assert_eq!(
+    unicode_forty_eight,
+    parse(&unicode_rendered).expect("48-char Unicode output should remain valid Cirru")
   );
   Ok(())
 }

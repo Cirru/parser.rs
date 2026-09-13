@@ -1,6 +1,5 @@
 
-|main! $ %{} 'CodeEntry
-  :doc "|Entry that makes open-identity reachable."
+|main! $ %{} 'CodeEntry (:doc "|Entry that makes open-identity reachable.")
   :code $ quote $ defn main! () (open-identity 1)
   :examples $ []
   :schema $ :: 'Fn $ {} (:return 'Number)
